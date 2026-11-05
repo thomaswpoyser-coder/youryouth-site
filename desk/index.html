@@ -59,6 +59,18 @@
   .tabs button{background:#fff;border:1px solid var(--line);color:var(--green);
     border-radius:999px;padding:8px 18px;font:inherit;font-weight:600;cursor:pointer}
   .tabs button.active{background:var(--green);color:#fff;border-color:var(--green)}
+  .sidetoggle{display:inline-flex;background:#fff;border:1px solid var(--line);
+    border-radius:999px;padding:3px;margin:0 0 18px}
+  .sidetoggle button{background:transparent;border:none;color:var(--green);
+    border-radius:999px;padding:7px 22px;font:inherit;font-weight:600;cursor:pointer}
+  .sidetoggle button.active{background:var(--green);color:#fff}
+  .person{display:flex;gap:14px;align-items:flex-start}
+  .avatar{width:52px;height:52px;border-radius:50%;flex:none;background:var(--soft);
+    color:var(--green);font-family:Georgia,serif;font-size:21px;line-height:52px;text-align:center;overflow:hidden}
+  .avatar img{width:52px;height:52px;object-fit:cover;display:block}
+  .person .role{color:#7A5B12;font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+  .person .contact{font-size:14.5px;margin-top:3px}
+  .person .contact a{color:var(--green)}
   .grid{display:grid;grid-template-columns:330px 1fr;gap:20px;align-items:start}
   @media (max-width:820px){.grid{grid-template-columns:1fr}}
   .listitem{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);
@@ -139,6 +151,20 @@
       </div>
     </header>
 
+    <!-- Side toggle: shown when this account also has a church side
+         (a Your People church group). One sign-in covers both sides;
+         switching sides never leaves this page or the session. -->
+    <div class="sidetoggle hidden" id="side-toggle" role="tablist" aria-label="Youth or church">
+      <button type="button" id="side-youth" class="active">Youth</button>
+      <button type="button" id="side-church">Church</button>
+    </div>
+
+    <div id="side-youth-view">
+    <div class="card hidden" id="youth-empty">
+      <h2 style="margin:0 0 4px;font-size:21px;color:var(--green)">No youth group yet</h2>
+      <p class="muted" style="margin:0">This account does not belong to a youth group. Youth groups begin in the Your Youth app — when you join one, it will appear on this side of the desk.</p>
+    </div>
+    <div id="youth-main">
     <div class="groupbar">
       <span id="group-select-wrap"><select id="group-select" aria-label="Your groups"></select></span>
       <span class="joincode">Join code: <strong id="group-code"></strong></span>
@@ -350,6 +376,84 @@
       </section>
     </div>
 
+    </div><!-- /youth-main -->
+    </div><!-- /side-youth-view -->
+
+    <!-- ============ CHURCH SIDE ============
+         The same account's church groups (kind = 'church'), with the
+         church workspace from the Your People desk: announcements,
+         calendar and directory. Leaders edit; members read. ------- -->
+    <div id="side-church-view" class="hidden">
+      <div class="groupbar">
+        <span id="cgroup-select-wrap"><select id="cgroup-select" aria-label="Choose a church"></select></span>
+        <span class="joincode">Join code: <strong id="cgroup-code"></strong></span>
+        <span class="joincode">&middot; <span id="cgroup-role"></span></span>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button type="button" id="ctab-announcements" class="active">Announcements</button>
+        <button type="button" id="ctab-events">Calendar</button>
+        <button type="button" id="ctab-directory">Directory</button>
+      </div>
+
+      <!-- Church announcements -->
+      <section id="cpane-announcements">
+        <div class="card" id="cann-form-card">
+          <h2 style="margin:0 0 4px;font-size:21px;color:var(--green)">Post an announcement</h2>
+          <form id="cann-form">
+            <label for="caf-title">Title</label>
+            <input type="text" id="caf-title" maxlength="120" placeholder="e.g. Sunday service time change">
+            <label for="caf-body">Announcement</label>
+            <textarea id="caf-body" rows="4" placeholder="What does the whole church need to know?"></textarea>
+            <div class="btnrow">
+              <button class="btn" type="submit" id="caf-submit">Post announcement</button>
+              <button class="btn secondary hidden" type="button" id="caf-cancel">Cancel edit</button>
+            </div>
+            <p class="msg" id="caf-msg"></p>
+          </form>
+        </div>
+        <h2 class="sectiontitle">Announcements</h2>
+        <p class="msg" id="cann-msg" style="margin:0 0 10px"></p>
+        <div id="cann-list"></div>
+      </section>
+
+      <!-- Church calendar -->
+      <section id="cpane-events" class="hidden">
+        <div class="card" id="cevent-form-card">
+          <h2 style="margin:0 0 4px;font-size:21px;color:var(--green)">Add an event</h2>
+          <form id="cevent-form">
+            <label for="cef-title">Event title</label>
+            <input type="text" id="cef-title" maxlength="120" placeholder="e.g. Sunday worship">
+            <label for="cef-starts">Starts</label>
+            <input type="datetime-local" id="cef-starts">
+            <label for="cef-ends">Ends (optional)</label>
+            <input type="datetime-local" id="cef-ends">
+            <label for="cef-location">Location (optional)</label>
+            <input type="text" id="cef-location" maxlength="120" placeholder="e.g. Main hall">
+            <label for="cef-notes">Notes (optional)</label>
+            <textarea id="cef-notes" rows="3" placeholder="Anything people should know before they come?"></textarea>
+            <div class="btnrow">
+              <button class="btn" type="submit" id="cef-submit">Add event</button>
+              <button class="btn secondary hidden" type="button" id="cef-cancel">Cancel edit</button>
+            </div>
+            <p class="msg" id="cef-msg"></p>
+          </form>
+        </div>
+        <h2 class="sectiontitle">Coming up</h2>
+        <p class="msg" id="cevents-msg" style="margin:0 0 10px"></p>
+        <div id="cevent-list"></div>
+      </section>
+
+      <!-- Church directory -->
+      <section id="cpane-directory" class="hidden">
+        <h2 class="sectiontitle">Directory</h2>
+        <p class="hint" style="margin:0 0 14px">Members who chose to be listed, with the contact details each of them chose to share. People manage their own listing in the app.</p>
+        <input type="text" id="cdir-search" placeholder="Search by name" style="margin-bottom:16px">
+        <p class="msg" id="cdir-msg"></p>
+        <div id="cdir-list"></div>
+      </section>
+    </div><!-- /side-church-view -->
+
     <footer class="foot">Your Youth — what you post here appears in the app right away.</footer>
   </div>
 </div>
@@ -393,6 +497,30 @@ function fmtDay(iso) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '';
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function fmtTime(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+function fmtRange(e) {
+  let s = fmtWhen(e.starts_at);
+  if (e.ends_at) {
+    const a = new Date(e.starts_at), b = new Date(e.ends_at);
+    if (!isNaN(a.getTime()) && !isNaN(b.getTime())) {
+      s += (a.toDateString() === b.toDateString())
+        ? ' – ' + fmtTime(e.ends_at)
+        : ' – ' + fmtWhen(e.ends_at);
+    }
+  }
+  return s;
+}
+function toLocalInput(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const p = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+    'T' + p(d.getHours()) + ':' + p(d.getMinutes());
 }
 
 /* YouTube link check — ported from the app's src/lib/youtube.ts.
@@ -451,10 +579,15 @@ function screenMessage(body) {
 /* ---------- state ---------- */
 const S = {
   user: null, profile: null,
-  memberships: [],           // [{group:{id,name,join_code}, role}]
+  memberships: [],           // youth groups: [{group:{id,name,join_code,kind,created_by}, role}]
+  churchMemberships: [],     // church groups (kind = 'church'), same shape
+  side: 'youth',             // which side of the desk is showing
   groupId: null,
+  churchGroupId: null,
   lessons: [], questions: [], events: [], announcements: [], myPrayers: [],
+  churchAnnouncements: [], churchEvents: [], directory: [],
   editingId: null,           // lesson open in the editor (null = new)
+  editingChurchAnnId: null, editingChurchEventId: null,
   readerId: null,            // lesson open in the member reader
   assistOk: null,            // probe result (null = not probed yet)
 };
@@ -516,7 +649,8 @@ client.auth.onAuthStateChange((_event, session) => {
       loadAccount();
     }
   } else {
-    S.user = null; S.profile = null; S.memberships = []; S.groupId = null;
+    S.user = null; S.profile = null; S.memberships = []; S.churchMemberships = [];
+    S.groupId = null; S.churchGroupId = null; S.side = 'youth';
     showView('view-signin');
   }
 });
@@ -543,21 +677,33 @@ async function loadAccount() {
     return;
   }
   const ids = rows.map((r) => r.group_id);
-  // Mirror kind filter: this desk is Your Youth's, so church groups
-  // (kind = 'church', Your People migration 019) never appear here.
-  // A row with no kind reads as a youth group, as every group did
-  // before the church app existed; if the column itself is missing
-  // the read is retried without it, the desk's pre-019 behaviour.
-  let grp = await client.from('groups').select('id, name, join_code, kind').in('id', ids);
+  // Groups carry a kind (Your People migration 019): 'church' for
+  // church groups; anything else — including no kind on record —
+  // reads as a youth group, as every group did before the church
+  // app existed. created_by says who set the group up. If a column
+  // is missing (a backend from before those migrations) the read
+  // is retried without it, the desk's older behaviour.
+  let grp = await client.from('groups').select('id, name, join_code, kind, created_by').in('id', ids);
+  if (grp.error && /created_by/.test(grp.error.message)) {
+    grp = await client.from('groups').select('id, name, join_code, kind').in('id', ids);
+  }
   if (grp.error && /kind/.test(grp.error.message)) {
     grp = await client.from('groups').select('id, name, join_code').in('id', ids);
   }
   const byId = {};
   for (const g of grp.data || []) byId[g.id] = g;
-  S.memberships = rows
-    .filter((r) => byId[r.group_id] && byId[r.group_id].kind !== 'church')
+  const all = rows
+    .filter((r) => byId[r.group_id])
     .map((r) => ({ group: byId[r.group_id], role: r.role }));
-  if (S.memberships.length === 0) { showView('view-nogroup'); return; }
+  // The two sides of the desk split on kind: the Youth side keeps
+  // exactly the memberships it has always shown; the Church side
+  // holds the kind = 'church' groups for the toggle workspace.
+  S.memberships = all.filter((m) => m.group.kind !== 'church');
+  S.churchMemberships = all.filter((m) => m.group.kind === 'church');
+  if (S.memberships.length === 0 && S.churchMemberships.length === 0) {
+    showView('view-nogroup');
+    return;
+  }
 
   $('who-name').textContent = (S.profile && S.profile.display_name) || 'Member';
   $('who-email').textContent = S.user.email || '';
@@ -571,10 +717,36 @@ async function loadAccount() {
     sel.appendChild(opt);
   }
   $('group-select-wrap').classList.toggle('hidden', S.memberships.length < 2);
-  S.groupId = S.memberships[0].group.id;
-  sel.value = S.groupId;
+  S.groupId = S.memberships.length > 0 ? S.memberships[0].group.id : null;
+  if (S.groupId) sel.value = S.groupId;
+
+  const csel = $('cgroup-select');
+  csel.replaceChildren();
+  for (const m of S.churchMemberships) {
+    const opt = document.createElement('option');
+    opt.value = m.group.id;
+    opt.textContent = m.group.name;
+    csel.appendChild(opt);
+  }
+  $('cgroup-select-wrap').classList.toggle('hidden', S.churchMemberships.length < 2);
+  S.churchGroupId = S.churchMemberships.length > 0 ? S.churchMemberships[0].group.id : null;
+  if (S.churchGroupId) csel.value = S.churchGroupId;
+
+  // The side toggle appears whenever this account has a church
+  // side at all — alongside youth groups, or on its own. A
+  // church-only account lands on the Church side; otherwise the
+  // Youth side is home, unless the last visit left the desk on
+  // the Church side (remembered on this device only).
+  const hasChurch = S.churchMemberships.length > 0;
+  const hasYouth = S.memberships.length > 0;
+  $('side-toggle').classList.toggle('hidden', !hasChurch);
+  let savedSide = null;
+  try { savedSide = window.localStorage.getItem('youryouth-desk-side'); } catch (e) { /* storage unavailable */ }
+  if (hasChurch && !hasYouth) S.side = 'church';
+  else if (savedSide === 'church' && hasChurch) S.side = 'church';
+  else S.side = 'youth';
   showView('view-app');
-  applyGroup();
+  setSide(S.side, false);
 }
 $('group-select').addEventListener('change', () => {
   S.groupId = $('group-select').value;
@@ -582,6 +754,41 @@ $('group-select').addEventListener('change', () => {
   S.readerId = null;
   applyGroup();
 });
+$('cgroup-select').addEventListener('change', () => {
+  S.churchGroupId = $('cgroup-select').value;
+  cancelChurchAnnEdit();
+  cancelChurchEventEdit();
+  applyChurchGroup();
+});
+
+/* ---------- side toggle (Youth | Church) ----------
+   One page, one session: switching sides only swaps which
+   workspace is visible and reloads that side's group. The chosen
+   side is remembered on this device so a refresh returns to it. */
+function setSide(side, remember) {
+  S.side = side === 'church' ? 'church' : 'youth';
+  if (remember !== false) {
+    try { window.localStorage.setItem('youryouth-desk-side', S.side); } catch (e) { /* storage unavailable */ }
+  }
+  $('side-youth').classList.toggle('active', S.side === 'youth');
+  $('side-church').classList.toggle('active', S.side === 'church');
+  $('side-youth-view').classList.toggle('hidden', S.side !== 'youth');
+  $('side-church-view').classList.toggle('hidden', S.side !== 'church');
+  if (S.side === 'church') {
+    applyChurchGroup();
+  } else if (S.memberships.length > 0) {
+    $('youth-empty').classList.add('hidden');
+    $('youth-main').classList.remove('hidden');
+    applyGroup();
+  } else {
+    // A church-only account looking at the Youth side: there is
+    // nothing here yet, and the empty card says so plainly.
+    $('youth-empty').classList.remove('hidden');
+    $('youth-main').classList.add('hidden');
+  }
+}
+$('side-youth').addEventListener('click', () => setSide('youth'));
+$('side-church').addEventListener('click', () => setSide('church'));
 
 function applyGroup() {
   const m = currentMembership();
@@ -1335,6 +1542,315 @@ $('myprayers-form').addEventListener('submit', async (ev) => {
   setMsg('mp-msg', 'Added to your prayers.', 'ok');
   loadMyPrayers();
 });
+
+/* ================= CHURCH SIDE =================
+   The church workspace, ported from the Your People church desk
+   (yourpeople.church/desk): same tables, same rules. Only groups
+   whose kind is 'church' ever appear here. Leaders create, edit
+   and delete announcements and events; members read. The
+   directory is read-only — the directory_entries view is the
+   rule: it only returns members who listed themselves, and each
+   contact field only when its owner chose to share it. -------- */
+function churchCurrentMembership() {
+  return S.churchMemberships.find((m) => m.group.id === S.churchGroupId) || null;
+}
+function churchIsLeaderHere() {
+  const m = churchCurrentMembership();
+  return !!m && m.role === 'leader';
+}
+function roleLabel(role) {
+  return role === 'leader' ? 'Leader' : 'Member';
+}
+function applyChurchGroup() {
+  const m = churchCurrentMembership();
+  if (!m) return;
+  $('cgroup-code').textContent = m.group.join_code || '';
+  let role = roleLabel(m.role);
+  if (m.group.created_by && S.user && m.group.created_by === S.user.id) role += ' · you set this church up';
+  $('cgroup-role').textContent = role;
+  const leader = churchIsLeaderHere();
+  $('cann-form-card').classList.toggle('hidden', !leader);
+  $('cevent-form-card').classList.toggle('hidden', !leader);
+  loadChurchAnnouncements();
+  loadChurchEvents();
+  loadChurchDirectory();
+}
+
+/* ---------- church desk tabs ---------- */
+function selectChurchTab(name) {
+  for (const t of ['announcements', 'events', 'directory']) {
+    $('ctab-' + t).classList.toggle('active', t === name);
+    $('cpane-' + t).classList.toggle('hidden', t !== name);
+  }
+}
+$('ctab-announcements').addEventListener('click', () => selectChurchTab('announcements'));
+$('ctab-events').addEventListener('click', () => selectChurchTab('events'));
+$('ctab-directory').addEventListener('click', () => selectChurchTab('directory'));
+
+/* ---------- church announcements ---------- */
+async function fetchChurchAnnouncements() {
+  const { data, error } = await client
+    .from('announcements')
+    .select('*')
+    .eq('group_id', S.churchGroupId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  return { list: data || [], error };
+}
+function churchAnnouncementCard(a, leader) {
+  const card = h('div', 'staticitem');
+  card.appendChild(h('div', 't', a.title));
+  card.appendChild(h('div', 's', fmtDay(a.created_at)));
+  const b = h('div', 'bodytext', a.body); b.style.marginTop = '6px'; card.appendChild(b);
+  if (leader) {
+    const row = h('div', 'row-actions');
+    const edit = h('button', 'btn secondary small', 'Edit');
+    edit.type = 'button';
+    edit.addEventListener('click', () => startChurchAnnEdit(a));
+    row.appendChild(edit);
+    const del = h('button', 'btn danger small', 'Delete');
+    del.type = 'button';
+    del.addEventListener('click', async () => {
+      if (!window.confirm('Delete this announcement?')) return;
+      const { error } = await client.from('announcements').delete().eq('id', a.id);
+      if (error) { setMsg('cann-msg', 'That announcement could not be deleted. Check your connection and try again.', 'err'); return; }
+      if (S.editingChurchAnnId === a.id) cancelChurchAnnEdit();
+      loadChurchAnnouncements();
+    });
+    row.appendChild(del);
+    card.appendChild(row);
+  }
+  return card;
+}
+async function loadChurchAnnouncements() {
+  const { list, error } = await fetchChurchAnnouncements();
+  const box = $('cann-list');
+  box.replaceChildren();
+  if (error) { setMsg('cann-msg', 'Announcements could not load. Check your connection and try again.', 'err'); return; }
+  setMsg('cann-msg', '');
+  S.churchAnnouncements = list;
+  if (list.length === 0) { box.appendChild(h('p', 'muted', 'No announcements yet.')); return; }
+  const leader = churchIsLeaderHere();
+  for (const a of list) box.appendChild(churchAnnouncementCard(a, leader));
+}
+function startChurchAnnEdit(a) {
+  S.editingChurchAnnId = a.id;
+  $('caf-title').value = a.title || '';
+  $('caf-body').value = a.body || '';
+  $('caf-submit').textContent = 'Save changes';
+  $('caf-cancel').classList.remove('hidden');
+  setMsg('caf-msg', '');
+  $('caf-title').focus();
+}
+function cancelChurchAnnEdit() {
+  S.editingChurchAnnId = null;
+  const form = $('cann-form');
+  if (form) form.reset();
+  $('caf-submit').textContent = 'Post announcement';
+  $('caf-cancel').classList.add('hidden');
+}
+$('caf-cancel').addEventListener('click', cancelChurchAnnEdit);
+$('cann-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const title = $('caf-title').value.trim();
+  const body = $('caf-body').value.trim();
+  if (!title || !body) { setMsg('caf-msg', 'Write a title and a message first.', 'err'); return; }
+  let error;
+  if (S.editingChurchAnnId) {
+    ({ error } = await client.from('announcements').update({ title, body }).eq('id', S.editingChurchAnnId));
+  } else {
+    ({ error } = await client.from('announcements').insert({ group_id: S.churchGroupId, title, body }));
+  }
+  if (error) { setMsg('caf-msg', 'That announcement did not save. Check your connection and try again.', 'err'); return; }
+  const wasEdit = !!S.editingChurchAnnId;
+  cancelChurchAnnEdit();
+  setMsg('caf-msg', wasEdit ? 'Announcement updated.' : 'Announcement posted to the whole church.', 'ok');
+  loadChurchAnnouncements();
+});
+
+/* ---------- church calendar (events) ---------- */
+async function fetchChurchEvents() {
+  const { data, error } = await client
+    .from('events')
+    .select('*')
+    .eq('group_id', S.churchGroupId)
+    .order('starts_at', { ascending: true })
+    .limit(50);
+  if (error) return { list: null, error };
+  const list = (data || []).filter((e) => new Date(e.starts_at).getTime() >= startOfToday().getTime());
+  return { list, error: null };
+}
+function churchEventCard(e, leader) {
+  const card = h('div', 'staticitem');
+  card.appendChild(h('div', 't', e.title));
+  card.appendChild(h('div', 's', fmtRange(e) + (e.location ? ' · ' + e.location : '')));
+  if (e.notes) { const n = h('div', 'bodytext', e.notes); n.style.marginTop = '6px'; card.appendChild(n); }
+  if (leader) {
+    const row = h('div', 'row-actions');
+    const edit = h('button', 'btn secondary small', 'Edit');
+    edit.type = 'button';
+    edit.addEventListener('click', () => startChurchEventEdit(e));
+    row.appendChild(edit);
+    const del = h('button', 'btn danger small', 'Delete');
+    del.type = 'button';
+    del.addEventListener('click', () => deleteChurchEvent(e));
+    row.appendChild(del);
+    card.appendChild(row);
+  }
+  return card;
+}
+async function loadChurchEvents() {
+  const { list, error } = await fetchChurchEvents();
+  const box = $('cevent-list');
+  box.replaceChildren();
+  if (error) { setMsg('cevents-msg', 'Events could not load. Check your connection and try again.', 'err'); return; }
+  setMsg('cevents-msg', '');
+  S.churchEvents = list;
+  if (list.length === 0) { box.appendChild(h('p', 'muted', 'No upcoming events.')); return; }
+  const leader = churchIsLeaderHere();
+  for (const e of list) box.appendChild(churchEventCard(e, leader));
+}
+async function deleteChurchEvent(e) {
+  if (!window.confirm('Delete the event "' + e.title + '"?')) return;
+  const { error } = await client.from('events').delete().eq('id', e.id);
+  if (error) { setMsg('cevents-msg', 'That event could not be deleted. Check your connection and try again.', 'err'); return; }
+  if (S.editingChurchEventId === e.id) cancelChurchEventEdit();
+  loadChurchEvents();
+}
+function startChurchEventEdit(e) {
+  S.editingChurchEventId = e.id;
+  $('cef-title').value = e.title || '';
+  $('cef-starts').value = toLocalInput(e.starts_at);
+  $('cef-ends').value = e.ends_at ? toLocalInput(e.ends_at) : '';
+  $('cef-location').value = e.location || '';
+  $('cef-notes').value = e.notes || '';
+  $('cef-submit').textContent = 'Save changes';
+  $('cef-cancel').classList.remove('hidden');
+  setMsg('cef-msg', '');
+  $('cef-title').focus();
+}
+function cancelChurchEventEdit() {
+  S.editingChurchEventId = null;
+  const form = $('cevent-form');
+  if (form) form.reset();
+  $('cef-submit').textContent = 'Add event';
+  $('cef-cancel').classList.add('hidden');
+}
+$('cef-cancel').addEventListener('click', cancelChurchEventEdit);
+$('cevent-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const title = $('cef-title').value.trim();
+  const starts = $('cef-starts').value;
+  if (!title) { setMsg('cef-msg', 'Give the event a title first.', 'err'); return; }
+  if (!starts) { setMsg('cef-msg', 'Give the event a date and time first.', 'err'); return; }
+  const ends = $('cef-ends').value;
+  const fields = {
+    title,
+    starts_at: new Date(starts).toISOString(),
+    ends_at: ends ? new Date(ends).toISOString() : null,
+    location: $('cef-location').value.trim(),
+    notes: $('cef-notes').value.trim(),
+  };
+  let error;
+  if (S.editingChurchEventId) {
+    ({ error } = await client.from('events').update(fields).eq('id', S.editingChurchEventId));
+  } else {
+    ({ error } = await client.from('events').insert({ group_id: S.churchGroupId, ...fields }));
+  }
+  if (error) { setMsg('cef-msg', 'That event did not save. Check your connection and try again.', 'err'); return; }
+  const wasEdit = !!S.editingChurchEventId;
+  cancelChurchEventEdit();
+  setMsg('cef-msg', wasEdit ? 'Event updated.' : 'Event added to the calendar.', 'ok');
+  loadChurchEvents();
+});
+
+/* ---------- church directory ---------- */
+function photoUrl(path) {
+  if (!path) return null;
+  try {
+    const { data } = client.storage.from('profile-photos').getPublicUrl(path);
+    return data && data.publicUrl ? data.publicUrl : null;
+  } catch (_e) { return null; }
+}
+function churchDirectoryCard(e) {
+  const card = h('div', 'staticitem');
+  const person = h('div', 'person');
+  const av = h('div', 'avatar');
+  const url = e.photo_path ? photoUrl(e.photo_path) : null;
+  if (url) {
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = '';
+    img.addEventListener('error', () => { av.textContent = (e.display_name || 'M').trim().charAt(0).toUpperCase() || 'M'; });
+    av.appendChild(img);
+  } else {
+    av.textContent = (e.display_name || 'M').trim().charAt(0).toUpperCase() || 'M';
+  }
+  person.appendChild(av);
+  const main = h('div');
+  main.appendChild(h('div', 't', e.display_name || 'Member'));
+  main.appendChild(h('div', 'role', roleLabel(e.role)));
+  if (e.directory_note) { const n = h('div', 'bodytext', e.directory_note); n.style.marginTop = '3px'; main.appendChild(n); }
+  if (e.phone) {
+    const c = h('div', 'contact');
+    const a = document.createElement('a');
+    a.href = 'tel:' + e.phone.replace(/[^+\d]/g, '');
+    a.textContent = e.phone;
+    c.appendChild(a);
+    main.appendChild(c);
+  }
+  if (e.email) {
+    const c = h('div', 'contact');
+    const a = document.createElement('a');
+    a.href = 'mailto:' + e.email;
+    a.textContent = e.email;
+    c.appendChild(a);
+    main.appendChild(c);
+  }
+  person.appendChild(main);
+  card.appendChild(person);
+  return card;
+}
+function renderChurchDirectory() {
+  const box = $('cdir-list');
+  box.replaceChildren();
+  const needle = $('cdir-search').value.trim().toLowerCase();
+  const list = needle
+    ? S.directory.filter((e) => (e.display_name || '').toLowerCase().includes(needle) ||
+        (e.directory_note || '').toLowerCase().includes(needle))
+    : S.directory;
+  if (S.directory.length === 0) {
+    box.appendChild(h('p', 'muted', 'Nobody is listed yet. When members add themselves to the directory in the app, they show here.'));
+    return;
+  }
+  if (list.length === 0) {
+    box.appendChild(h('p', 'muted', 'No listed member matches that search.'));
+    return;
+  }
+  for (const e of list) box.appendChild(churchDirectoryCard(e));
+}
+$('cdir-search').addEventListener('input', renderChurchDirectory);
+async function loadChurchDirectory() {
+  const box = $('cdir-list');
+  box.replaceChildren();
+  setMsg('cdir-msg', 'Loading the directory…');
+  // select('*') on purpose: the view gained its photo column in a
+  // later migration, and older backends must keep working.
+  const { data, error } = await client
+    .from('directory_entries')
+    .select('*')
+    .eq('group_id', S.churchGroupId)
+    .order('display_name', { ascending: true })
+    .limit(500);
+  if (error) {
+    setMsg('cdir-msg', 'The directory could not load just now. If this keeps happening, the directory update may not have reached the database yet — tell the person who runs Your People.', 'err');
+    S.directory = [];
+    return;
+  }
+  setMsg('cdir-msg', '');
+  S.directory = data || [];
+  renderChurchDirectory();
+}
 
 /* ---------- first route ---------- */
 (async () => {
