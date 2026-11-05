@@ -6,6 +6,17 @@
 <meta name="color-scheme" content="light dark" />
 <meta name="description" content="Your Youth is a mobile app that gives Christian youth groups a private, safeguarded digital home — branded from the group's own logo, with group chat, anonymous questions, prayer, events, and the Bible built in." />
 <link rel="icon" type="image/png" href="/assets/your-youth-logo.png" />
+<script>
+  // A password-reset email can land on this page when Supabase falls
+  // back to the site root: forward any recovery or session hash to
+  // the desk, which is where new passwords are set.
+  (function () {
+    var h = window.location.hash || '';
+    if (h.indexOf('type=recovery') !== -1 || h.indexOf('access_token=') !== -1) {
+      window.location.replace('/desk/' + h);
+    }
+  })();
+</script>
 <title>Your Youth — a digital home for youth groups</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -74,6 +85,7 @@
   .nav-links a{color:var(--ink-soft);text-decoration:none;font-weight:700;font-size:15.5px}
   .nav-links a:hover{color:var(--gold-deep)}
   @media (max-width:640px){.nav-links a:not(:last-child){display:none}}
+  .nav-signin{padding:9px 20px;font-size:15px;border-radius:999px;white-space:nowrap}
 
   /* ---------- hero ---------- */
   .hero{padding:58px 0 30px}
@@ -305,6 +317,7 @@
       <a href="#privacy">Privacy</a>
       <a href="#contact">Contact</a>
     </nav>
+    <a class="btn btn-solid nav-signin" href="/desk/">Sign in</a>
   </div>
 </header>
 

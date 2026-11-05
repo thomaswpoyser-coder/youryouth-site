@@ -36,6 +36,7 @@
   .btn{display:inline-block;background:var(--green);color:#fff;border:1px solid var(--green);
     border-radius:10px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer}
   .btn:hover{background:var(--green-deep)}
+  a.btn{text-decoration:none}
   .btn:disabled{opacity:.55;cursor:default}
   .btn.secondary{background:#fff;color:var(--green)}
   .btn.secondary:hover{background:var(--soft)}
@@ -117,8 +118,8 @@
   <!-- ======================= sign in ======================= -->
   <div id="view-signin" class="card center-card hidden">
     <span class="wordmark">your youth</span>
-    <h1 style="margin:14px 0 4px;font-size:24px;color:var(--green)">Leader desk</h1>
-    <p class="muted" style="margin:0 0 6px">Sign in with the same email and password you use in the Your Youth app.</p>
+    <h1 style="margin:14px 0 4px;font-size:24px;color:var(--green)">Sign in</h1>
+    <p class="muted" style="margin:0 0 6px">Leaders, students and parents all sign in here, with the same email and password you use in the Your Youth app.</p>
     <form id="signin-form">
       <label for="si-email">Email address</label>
       <input type="email" id="si-email" autocomplete="email" required>
@@ -129,7 +130,35 @@
       </div>
       <p class="msg err" id="si-msg"></p>
     </form>
+    <p style="margin:14px 0 0"><button class="backlink" id="forgot-link" type="button" style="padding:0">Forgot your password?</button></p>
+    <div id="reset-request" class="hidden">
+      <form id="reset-form">
+        <label for="reset-email">Email address</label>
+        <input type="email" id="reset-email" autocomplete="email">
+        <div class="btnrow">
+          <button class="btn secondary" type="submit" id="reset-button">Email me a reset link</button>
+        </div>
+        <p class="msg" id="reset-msg"></p>
+      </form>
+    </div>
     <p class="signin-note">New to Your Youth? Groups begin in the app — this desk is for people who already lead or belong to a group.</p>
+  </div>
+
+  <!-- ======================= set a new password (reset link) ======================= -->
+  <div id="view-newpassword" class="card center-card hidden">
+    <span class="wordmark">your youth</span>
+    <h1 style="margin:14px 0 4px;font-size:24px;color:var(--green)">Choose a new password</h1>
+    <p class="muted" style="margin:0 0 6px">You followed a password reset link. Set a new password for your account, and you will go straight to your desk.</p>
+    <form id="newpw-form">
+      <label for="np-password">New password</label>
+      <input type="password" id="np-password" autocomplete="new-password" required>
+      <label for="np-confirm">Type it again</label>
+      <input type="password" id="np-confirm" autocomplete="new-password" required>
+      <div class="btnrow">
+        <button class="btn" type="submit" id="np-button">Save new password</button>
+      </div>
+      <p class="msg" id="np-msg"></p>
+    </form>
   </div>
 
   <!-- ======================= no group ======================= -->
@@ -293,6 +322,7 @@
 
     <!-- ============ MEMBER HOME ============ -->
     <div id="member" class="hidden">
+      <h2 class="sectiontitle" id="member-group-name"></h2>
       <section>
         <h2 class="sectiontitle">This week</h2>
         <div id="member-passage"></div>
@@ -331,6 +361,18 @@
       <section>
         <h2 class="sectiontitle">Announcements</h2>
         <div id="member-announcements"></div>
+      </section>
+
+      <!-- Parents only, and only when the group has a giving link
+           saved: rendered by renderGivingCard in the script. -->
+      <section id="member-giving" class="hidden">
+        <h2 class="sectiontitle">Giving</h2>
+        <div class="card">
+          <p class="hint" style="margin:0 0 10px">Your group&rsquo;s online giving page — it opens in a new tab.</p>
+          <div class="btnrow">
+            <a class="btn" id="giving-link" href="#" target="_blank" rel="noopener">Give online</a>
+          </div>
+        </div>
       </section>
 
       <section class="grid" style="margin-top:26px">
@@ -580,7 +622,7 @@ function screenMessage(body) {
 /* ---------- state ---------- */
 const S = {
   user: null, profile: null,
-  memberships: [],           // youth groups: [{group:{id,name,join_code,kind,created_by,logo_url}, role}]
+  memberships: [],           // youth groups: [{group:{id,name,join_code,kind,created_by,logo_url,settings}, role}]
   churchMemberships: [],     // church groups (kind = 'church'), same shape
   side: 'youth',             // which side of the desk is showing
   groupId: null,
@@ -591,6 +633,7 @@ const S = {
   editingChurchAnnId: null, editingChurchEventId: null,
   readerId: null,            // lesson open in the member reader
   assistOk: null,            // probe result (null = not probed yet)
+  recovery: false,           // true while a password-reset link is being answered
 };
 function currentMembership() {
   return S.memberships.find((m) => m.group.id === S.groupId) || null;
@@ -608,7 +651,7 @@ function pendingApproval() {
 
 /* ---------- views ---------- */
 function showView(id) {
-  for (const v of ['view-loading', 'view-signin', 'view-nogroup', 'view-app']) {
+  for (const v of ['view-loading', 'view-signin', 'view-newpassword', 'view-nogroup', 'view-app']) {
     $(v).classList.toggle('hidden', v !== id);
   }
 }
@@ -666,14 +709,88 @@ $('signin-form').addEventListener('submit', async (ev) => {
   }
   // onAuthStateChange picks the session up and routes.
 });
+
+/* Forgot password: email a reset link that returns to this desk
+   (the redirectTo below), where the recovery handling further
+   down takes over. */
+$('forgot-link').addEventListener('click', () => {
+  const box = $('reset-request');
+  box.classList.toggle('hidden');
+  if (!box.classList.contains('hidden')) {
+    const typed = $('si-email').value.trim();
+    if (typed) $('reset-email').value = typed;
+    $('reset-email').focus();
+  }
+});
+$('reset-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const email = $('reset-email').value.trim();
+  if (!email) { setMsg('reset-msg', 'Type your email address first.', 'err'); return; }
+  const btn = $('reset-button');
+  btn.disabled = true;
+  setMsg('reset-msg', '');
+  const { error } = await client.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://youryouth.org/desk/',
+  });
+  btn.disabled = false;
+  if (error) {
+    setMsg('reset-msg', 'That did not send just now. Check your connection and try again.', 'err');
+    return;
+  }
+  setMsg('reset-msg', 'Check your email — a reset link is on its way. Follow it and you will come back here to choose a new password.', 'ok');
+});
+
+/* Set the new password: the recovery session is already live, so
+   updateUser is the whole job; then route by role as usual. */
+$('newpw-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const pw = $('np-password').value;
+  const pw2 = $('np-confirm').value;
+  if (pw.length < 6) { setMsg('np-msg', 'The password needs at least 6 characters. Try a longer one.', 'err'); return; }
+  if (pw !== pw2) { setMsg('np-msg', 'The two passwords do not match. Type them again.', 'err'); return; }
+  const btn = $('np-button');
+  btn.disabled = true;
+  setMsg('np-msg', '');
+  const { error } = await client.auth.updateUser({ password: pw });
+  btn.disabled = false;
+  if (error) {
+    setMsg('np-msg', 'That did not save. The reset link may have expired — go back to sign in and request a fresh one.', 'err');
+    return;
+  }
+  S.recovery = false;
+  setMsg('np-msg', 'Password saved. Taking you to your desk…', 'ok');
+  loadAccount();
+});
 async function signOut() {
   await client.auth.signOut();
 }
 $('signout').addEventListener('click', signOut);
 $('nogroup-signout').addEventListener('click', signOut);
 
-client.auth.onAuthStateChange((_event, session) => {
+/* ---------- password recovery routing ----------
+   A reset link lands back on this page carrying its token in the
+   URL hash. supabase-js fires PASSWORD_RECOVERY once it has read
+   it; the hash itself is checked first as a backup signal, so the
+   set-new-password view wins over every other route until the new
+   password is saved. A hash carrying an error instead means the
+   link was expired or already used. */
+if (/type=recovery/.test(window.location.hash || '')) S.recovery = true;
+let linkError = /error(_description)?=/.test(window.location.hash || '');
+
+client.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY' && session && session.user) {
+    S.recovery = true;
+    S.user = session.user;
+    showView('view-newpassword');
+    return;
+  }
   if (session && session.user) {
+    if (S.recovery) {
+      // A session event landed while the reset form is up: stay.
+      S.user = session.user;
+      showView('view-newpassword');
+      return;
+    }
     if (!S.user || S.user.id !== session.user.id) {
       S.user = session.user;
       loadAccount();
@@ -683,6 +800,10 @@ client.auth.onAuthStateChange((_event, session) => {
     S.groupId = null; S.churchGroupId = null; S.side = 'youth';
     setFavicon(PLATFORM_FAVICON);
     showView('view-signin');
+    if (linkError) {
+      linkError = false;
+      setMsg('si-msg', 'That link did not work — it may have expired or already been used. If you were resetting your password, use “Forgot your password?” to get a fresh link.', 'err');
+    }
   }
 });
 
@@ -715,13 +836,14 @@ async function loadAccount() {
   // is missing (a backend from before those migrations) the read
   // is retried without it, the desk's older behaviour.
   // logo_url rides along so the tab favicon can wear the active
-  // group's own mark; it is the newest of these columns, so the
-  // retry below drops whichever column the error names — the same
+  // group's own mark, and settings rides along for the parents'
+  // giving card (the group's giving link lives there). The retry
+  // below drops whichever column the error names — the same
   // treatment kind and created_by have always had.
-  let grpCols = ['id', 'name', 'join_code', 'kind', 'created_by', 'logo_url'];
+  let grpCols = ['id', 'name', 'join_code', 'kind', 'created_by', 'logo_url', 'settings'];
   let grp = await client.from('groups').select(grpCols.join(', ')).in('id', ids);
   while (grp.error) {
-    const missing = ['logo_url', 'created_by', 'kind']
+    const missing = ['settings', 'logo_url', 'created_by', 'kind']
       .find((c) => grpCols.includes(c) && grp.error.message.includes(c));
     if (!missing) break;
     grpCols = grpCols.filter((c) => c !== missing);
@@ -1338,7 +1460,44 @@ $('tab-events').addEventListener('click', () => selectTab('events'));
 $('tab-announcements').addEventListener('click', () => selectTab('announcements'));
 
 /* ================= MEMBER HOME ================= */
+/* ---------- member: parents' giving card ----------
+   givingProviderFor is ported from the app (src/lib/
+   change-settings.tsx): a giving link counts only over https on
+   tithe.ly or canadahelps.org or one of their subdomains, so the
+   button can only ever open the group's real giving page, and it
+   names the provider it opens — the same labels the app uses. The
+   card is parents-only; students never see it on the web. */
+function givingProviderFor(raw) {
+  const trimmed = (raw || '').trim();
+  if (!trimmed) return null;
+  let url;
+  try { url = new URL(trimmed); } catch (e) { return null; }
+  if (url.protocol !== 'https:') return null;
+  const host = url.hostname.toLowerCase();
+  const isDomain = (d) => host === d || host.endsWith('.' + d);
+  if (isDomain('tithe.ly')) return 'tithely';
+  if (isDomain('canadahelps.org')) return 'canadahelps';
+  return null;
+}
+function renderGivingCard() {
+  const sec = $('member-giving');
+  const m = currentMembership();
+  const raw = m && m.group.settings && typeof m.group.settings.tithelyUrl === 'string'
+    ? m.group.settings.tithelyUrl : '';
+  const provider = (m && m.role === 'parent') ? givingProviderFor(raw) : null;
+  if (!provider) { sec.classList.add('hidden'); return; }
+  const link = $('giving-link');
+  link.href = raw.trim();
+  link.textContent = provider === 'tithely'
+    ? 'Give through Tithely'
+    : (provider === 'canadahelps' ? 'Give through CanadaHelps' : 'Give online');
+  sec.classList.remove('hidden');
+}
+
 async function loadMemberHome() {
+  const homeMembership = currentMembership();
+  $('member-group-name').textContent = homeMembership ? homeMembership.group.name : '';
+  renderGivingCard();
   // Current passage: the plan the leader set most recently (the
   // app's rule — Home reads bible_plans newest-first, limit 1).
   const passageBox = $('member-passage');
