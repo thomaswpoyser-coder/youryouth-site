@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your Youth — Leader Desk</title>
+<link rel="icon" type="image/png" href="/assets/your-youth-logo.png">
 <style>
   :root{
     --cream:#FAF8F3; --green:#2E493A; --green-deep:#213829; --gold:#E8C15A;
@@ -579,7 +580,7 @@ function screenMessage(body) {
 /* ---------- state ---------- */
 const S = {
   user: null, profile: null,
-  memberships: [],           // youth groups: [{group:{id,name,join_code,kind,created_by}, role}]
+  memberships: [],           // youth groups: [{group:{id,name,join_code,kind,created_by,logo_url}, role}]
   churchMemberships: [],     // church groups (kind = 'church'), same shape
   side: 'youth',             // which side of the desk is showing
   groupId: null,
@@ -610,6 +611,35 @@ function showView(id) {
   for (const v of ['view-loading', 'view-signin', 'view-nogroup', 'view-app']) {
     $(v).classList.toggle('hidden', v !== id);
   }
+}
+
+/* ---------- favicon ----------
+   The tab icon follows identity: the Your Youth platform mark by
+   default, and the active group's own logo once a group is loaded
+   — the youth group's logo on the Youth side, the church group's
+   on the Church side. A group with no logo keeps the platform
+   mark, and signing out returns the tab to it. */
+const PLATFORM_FAVICON = '/assets/your-youth-logo.png';
+function setFavicon(href) {
+  let link = document.querySelector('link[rel="icon"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'icon';
+    document.head.appendChild(link);
+  }
+  link.type = 'image/png';
+  link.href = href || PLATFORM_FAVICON;
+}
+function syncFavicon() {
+  let url = null;
+  if (S.side === 'church') {
+    const m = S.churchMemberships.find((x) => x.group.id === S.churchGroupId);
+    url = m && m.group.logo_url;
+  } else {
+    const m = currentMembership();
+    url = m && m.group.logo_url;
+  }
+  setFavicon(url ? url : PLATFORM_FAVICON);
 }
 
 /* ---------- auth ---------- */
@@ -651,6 +681,7 @@ client.auth.onAuthStateChange((_event, session) => {
   } else {
     S.user = null; S.profile = null; S.memberships = []; S.churchMemberships = [];
     S.groupId = null; S.churchGroupId = null; S.side = 'youth';
+    setFavicon(PLATFORM_FAVICON);
     showView('view-signin');
   }
 });
@@ -683,12 +714,18 @@ async function loadAccount() {
   // app existed. created_by says who set the group up. If a column
   // is missing (a backend from before those migrations) the read
   // is retried without it, the desk's older behaviour.
-  let grp = await client.from('groups').select('id, name, join_code, kind, created_by').in('id', ids);
-  if (grp.error && /created_by/.test(grp.error.message)) {
-    grp = await client.from('groups').select('id, name, join_code, kind').in('id', ids);
-  }
-  if (grp.error && /kind/.test(grp.error.message)) {
-    grp = await client.from('groups').select('id, name, join_code').in('id', ids);
+  // logo_url rides along so the tab favicon can wear the active
+  // group's own mark; it is the newest of these columns, so the
+  // retry below drops whichever column the error names — the same
+  // treatment kind and created_by have always had.
+  let grpCols = ['id', 'name', 'join_code', 'kind', 'created_by', 'logo_url'];
+  let grp = await client.from('groups').select(grpCols.join(', ')).in('id', ids);
+  while (grp.error) {
+    const missing = ['logo_url', 'created_by', 'kind']
+      .find((c) => grpCols.includes(c) && grp.error.message.includes(c));
+    if (!missing) break;
+    grpCols = grpCols.filter((c) => c !== missing);
+    grp = await client.from('groups').select(grpCols.join(', ')).in('id', ids);
   }
   const byId = {};
   for (const g of grp.data || []) byId[g.id] = g;
@@ -786,6 +823,7 @@ function setSide(side, remember) {
     $('youth-empty').classList.remove('hidden');
     $('youth-main').classList.add('hidden');
   }
+  syncFavicon();
 }
 $('side-youth').addEventListener('click', () => setSide('youth'));
 $('side-church').addEventListener('click', () => setSide('church'));
@@ -793,6 +831,7 @@ $('side-church').addEventListener('click', () => setSide('church'));
 function applyGroup() {
   const m = currentMembership();
   if (!m) return;
+  syncFavicon();
   $('group-code').textContent = m.group.join_code || '';
   $('group-role').textContent = m.role === 'leader' ? 'Leader' : (m.role === 'parent' ? 'Parent' : 'Member');
   const pending = pendingApproval();
@@ -1564,6 +1603,7 @@ function roleLabel(role) {
 function applyChurchGroup() {
   const m = churchCurrentMembership();
   if (!m) return;
+  syncFavicon();
   $('cgroup-code').textContent = m.group.join_code || '';
   let role = roleLabel(m.role);
   if (m.group.created_by && S.user && m.group.created_by === S.user.id) role += ' · you set this church up';
