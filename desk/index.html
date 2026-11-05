@@ -104,6 +104,85 @@
   .row-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
   .backlink{background:none;border:none;color:var(--green);font:inherit;font-weight:600;
     cursor:pointer;padding:0 0 10px;text-decoration:underline}
+  /* ============ lesson workstation (Lessons tab, leaders) ============
+     On a wide screen the tab takes the whole window: study tools in
+     rails either side of the writing area, each rail scrolling on its
+     own. Below 1500px everything stacks — editor first, then the
+     rails — and every panel collapses, so nothing is lost on a
+     phone, it is just sequential. The tools read from the Free Use
+     Bible API (public-domain / CC BY data only); if that service is
+     unreachable the panels say so and the editor carries on alone. */
+  .wrap.wide{max-width:none}
+  .ws-grid{display:grid;grid-template-columns:300px minmax(0,1fr) 300px;gap:18px;align-items:start}
+  .ws-rail{position:sticky;top:14px;max-height:calc(100vh - 28px);overflow-y:auto;
+    padding:2px 2px 6px;scrollbar-width:thin}
+  .ws-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:0;margin:0 0 16px;box-shadow:0 1px 2px rgba(38,49,42,.04);overflow:hidden}
+  .ws-phead{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;
+    background:none;border:0;padding:13px 16px;font:inherit;cursor:pointer;text-align:left}
+  .ws-phead .ws-pt{font-family:Georgia,"Times New Roman",serif;font-size:16.5px;color:var(--green-deep)}
+  .ws-phead .ws-chev{color:var(--gold);font-size:13px;flex:none}
+  .ws-pbody{padding:2px 16px 16px}
+  .ws-panel.closed .ws-pbody{display:none}
+  .ws-refrow{display:flex;gap:8px}
+  .ws-refrow input{flex:1;min-width:0}
+  .ws-refrow .btn{flex:none}
+  .ws-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+  .ws-tools select{width:auto;flex:1;min-width:120px;padding:7px 9px;font-size:14px}
+  .ws-tools label{margin:0;font-weight:600;font-size:13.5px;display:inline-flex;gap:6px;align-items:center}
+  .ws-tools label input{width:auto}
+  .ws-navrow{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+  .ws-navrow .btn{padding:5px 11px;font-size:13.5px}
+  .ws-passage{font-family:Georgia,"Times New Roman",serif;font-size:17px;color:var(--green-deep);margin:14px 0 2px}
+  .ws-trans-name{font-size:12.5px;color:var(--muted);margin:0 0 8px;letter-spacing:.02em}
+  .ws-reader{font-size:15.5px;line-height:1.65}
+  .ws-reader p{margin:0 0 10px}
+  .ws-vhead{font-family:Georgia,"Times New Roman",serif;font-style:italic;color:var(--green);
+    font-size:15px;margin:12px 0 6px}
+  .ws-vn{color:var(--gold);font-weight:700;font-size:11px;margin-right:3px}
+  .ws-verse.ws-hl{background:var(--soft);border-radius:4px;box-shadow:inset 3px 0 0 var(--gold);
+    padding:1px 3px;margin:-1px -3px}
+  .ws-credit{font-size:12px;color:var(--muted);margin:12px 0 0;line-height:1.45}
+  .ws-xref-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+  .ws-xref{background:var(--soft);border:1px solid var(--line);color:var(--green);
+    border-radius:999px;padding:4px 11px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+  .ws-xref:hover{border-color:var(--gold)}
+  .ws-work{margin:0 0 18px}
+  .ws-work:last-child{margin-bottom:2px}
+  .ws-work-label{font-weight:700;color:var(--green-deep);font-size:15px;margin:0 0 2px}
+  .ws-work-era{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+  .ws-comm{border-top:1px solid var(--line);padding:9px 0 2px}
+  .ws-comm:first-of-type{border-top:0;padding-top:2px}
+  .ws-comm .ws-on{font-size:12.5px;font-weight:700;color:var(--gold);letter-spacing:.03em;
+    text-transform:uppercase;margin:0 0 3px}
+  .ws-comm .ws-text{white-space:pre-wrap;word-wrap:break-word;font-size:14.5px;line-height:1.55}
+  .ws-clamp{max-height:9.2em;overflow:hidden}
+  .ws-more{background:none;border:0;color:var(--green);font:inherit;font-size:13.5px;
+    font-weight:700;cursor:pointer;padding:4px 0 0}
+  .ws-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .ws-chip{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:8px;
+    padding:3px 9px;font:inherit;font-size:13px;cursor:pointer}
+  .ws-chip:hover{border-color:var(--gold)}
+  .ws-chip .ws-chip-s{color:var(--muted);font-size:11.5px;margin-left:5px}
+  .ws-entry{border-top:1px solid var(--line);padding:11px 0 2px;margin-top:11px}
+  .ws-entry:first-of-type{border-top:0;margin-top:2px}
+  .ws-lemma{font-size:19px;font-family:Georgia,"Times New Roman",serif;color:var(--green-deep)}
+  .ws-translit{color:var(--muted);font-style:italic;margin-left:8px;font-size:14px}
+  .ws-gloss{font-weight:700;margin:2px 0}
+  .ws-pos{color:var(--muted);font-size:13px}
+  .ws-def{white-space:pre-wrap;word-wrap:break-word;font-size:14px;line-height:1.55;margin-top:4px}
+  .ws-occ{margin-top:8px;font-size:14px}
+  .ws-occ button{background:none;border:0;color:var(--green);font:inherit;font-weight:600;
+    cursor:pointer;padding:0;text-decoration:underline}
+  .lf-count{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+  .lf-count select{width:auto;padding:4px 7px;font-size:13.5px}
+  .lf-count .hint{margin:0}
+  @media (max-width:1499px){
+    .ws-grid{grid-template-columns:minmax(0,1fr)}
+    .ws-centre{order:-1}
+    .ws-rail{position:static;max-height:none;overflow:visible;padding:0}
+  }
+
 </style>
 </head>
 <body>
@@ -214,6 +293,48 @@
 
       <!-- Lessons -->
       <section id="pane-lessons">
+        <div class="ws-grid" id="ws-grid">
+      <!-- left rail: the passage and its cross-references -->
+      <aside class="ws-rail" id="ws-left" aria-label="Bible and cross-references">
+        <div class="ws-panel" id="ws-reader-panel">
+          <button type="button" class="ws-phead" data-ws-toggle="ws-reader-panel"><span class="ws-pt">Bible</span><span class="ws-chev">&#9662;</span></button>
+          <div class="ws-pbody">
+            <form class="ws-refrow" id="ws-ref-form">
+              <input type="text" id="ws-ref" placeholder="e.g. Psalm 23 or John 10:11" aria-label="Passage to look up">
+              <button class="btn secondary" type="submit">Go</button>
+            </form>
+            <div class="ws-tools">
+              <select id="ws-trans" aria-label="Translation">
+                <option value="BSB" selected>Berean Standard Bible</option>
+                <option value="ENGWEBP">World English Bible</option>
+                <option value="eng_kjv">King James Version</option>
+              </select>
+              <label><input type="checkbox" id="ws-parallel"> Parallel</label>
+              <select id="ws-trans2" class="hidden" aria-label="Second translation">
+                <option value="BSB">Berean Standard Bible</option>
+                <option value="ENGWEBP">World English Bible</option>
+                <option value="eng_kjv" selected>King James Version</option>
+              </select>
+            </div>
+            <div id="ws-reader-zone">
+              <p class="hint">The passage from your lesson appears here &mdash; or look one up above. The study tools follow the passage.</p>
+            </div>
+            <div class="ws-navrow">
+              <button class="btn secondary hidden" type="button" id="ws-prev-ch">&larr; <span></span></button>
+              <button class="btn secondary hidden" type="button" id="ws-next-ch"><span></span> &rarr;</button>
+            </div>
+            <p class="ws-credit">Berean Standard Bible &mdash; public domain (berean.bible). World English Bible and King James Version &mdash; public domain. Texts served by the Free Use Bible API (bible.helloao.org).</p>
+          </div>
+        </div>
+        <div class="ws-panel" id="ws-xref-panel">
+          <button type="button" class="ws-phead" data-ws-toggle="ws-xref-panel"><span class="ws-pt">Cross-references</span><span class="ws-chev">&#9662;</span></button>
+          <div class="ws-pbody">
+            <div id="ws-xref-zone"><p class="hint">Passages that speak to this one, in the Treasury of Scripture Knowledge tradition. Tap one to read it.</p></div>
+            <p class="ws-credit">Cross-reference data from OpenBible.info (CC BY 4.0), via the Free Use Bible API.</p>
+          </div>
+        </div>
+      </aside>
+        <div class="ws-centre" id="ws-centre">
         <div class="grid">
           <div>
             <button class="btn" id="lesson-new" type="button" style="margin-bottom:14px">New lesson</button>
@@ -230,6 +351,17 @@
               <input type="text" id="lf-passage" placeholder="e.g. Matthew 4:18–22">
               <label for="lf-body">Lesson</label>
               <textarea class="lesson-body" id="lf-body" placeholder="Write the lesson…"></textarea>
+
+              <div class="lf-count">
+                <span class="hint" id="lf-words">0 words &middot; &asymp; 0 min at 130 wpm</span>
+                <select id="lf-wpm" aria-label="Reading pace, words per minute">
+                  <option value="120">120</option>
+                  <option value="130" selected>130</option>
+                  <option value="140">140</option>
+                  <option value="150">150</option>
+                </select>
+                <span class="hint">words a minute, read aloud</span>
+              </div>
 
               <div class="assistbox" id="assist-box">
                 <p class="ah">Sermon assist</p>
@@ -256,6 +388,31 @@
             </form>
           </div>
         </div>
+        </div><!-- /ws-centre -->
+      <!-- right rail: commentaries and the original words -->
+      <aside class="ws-rail" id="ws-right" aria-label="Commentaries and word study">
+        <div class="ws-panel" id="ws-comm-panel">
+          <button type="button" class="ws-phead" data-ws-toggle="ws-comm-panel"><span class="ws-pt">Commentaries</span><span class="ws-chev">&#9662;</span></button>
+          <div class="ws-pbody">
+            <div id="ws-comm-zone"><p class="hint">Two trusted voices on the passage, each labelled with its era &mdash; servants for your study, never masters of it.</p></div>
+            <p class="ws-credit">Commentary texts are public domain, served by the Free Use Bible API (bible.helloao.org).</p>
+          </div>
+        </div>
+        <div class="ws-panel" id="ws-word-panel">
+          <button type="button" class="ws-phead" data-ws-toggle="ws-word-panel"><span class="ws-pt">Word study</span><span class="ws-chev">&#9662;</span></button>
+          <div class="ws-pbody">
+            <form class="ws-refrow" id="ws-word-form">
+              <input type="text" id="ws-word" placeholder="A word, or Strong&rsquo;s no. (G25)" aria-label="Word or Strong's number to look up">
+              <button class="btn secondary" type="submit">Look up</button>
+            </form>
+            <p class="hint">Type a word from the passage, a Greek or Hebrew word, or a Strong&rsquo;s number like G25 or H430.</p>
+            <div id="ws-chips-zone"></div>
+            <div id="ws-word-zone"></div>
+            <p class="ws-credit">Brief lexicons from STEPBible, Tyndale House, Cambridge (CC BY 4.0). Original-language text from the Berean Interlinear (public domain). Via the Free Use Bible API.</p>
+          </div>
+        </div>
+      </aside>
+        </div><!-- /ws-grid -->
       </section>
 
       <!-- Questions -->
@@ -799,6 +956,7 @@ client.auth.onAuthStateChange((event, session) => {
     S.user = null; S.profile = null; S.memberships = []; S.churchMemberships = [];
     S.groupId = null; S.churchGroupId = null; S.side = 'youth';
     setFavicon(PLATFORM_FAVICON);
+    document.querySelector('.wrap').classList.remove('wide');
     showView('view-signin');
     if (linkError) {
       linkError = false;
@@ -946,6 +1104,7 @@ function setSide(side, remember) {
     $('youth-main').classList.add('hidden');
   }
   syncFavicon();
+  wsSyncWidth();
 }
 $('side-youth').addEventListener('click', () => setSide('youth'));
 $('side-church').addEventListener('click', () => setSide('church'));
@@ -976,6 +1135,8 @@ function applyGroup() {
     loadEvents(true);
     loadAnnouncements(true);
     probeAssist();
+    wsSyncWidth();
+    wsMaybeInit();
   } else {
     loadMemberHome();
   }
@@ -1031,6 +1192,8 @@ function resetEditor() {
   $('lf-delete').classList.add('hidden');
   setMsg('lf-msg', '');
   setMsg('assist-msg', '');
+  updateWordCount();
+  wsFollowPassage();
   renderLessonList();
 }
 function openLesson(id) {
@@ -1047,6 +1210,8 @@ function openLesson(id) {
   $('lf-delete').classList.remove('hidden');
   setMsg('lf-msg', '');
   setMsg('assist-msg', '');
+  updateWordCount();
+  wsFollowPassage();
   renderLessonList();
 }
 $('lesson-new').addEventListener('click', resetEditor);
@@ -1173,6 +1338,7 @@ document.querySelectorAll('[data-assist]').forEach((btn) => {
         } else {
           $('lf-body').value = $('lf-body').value.replace(/\s+$/, '') + '\n\n' + text;
         }
+        updateWordCount();
         setMsg('assist-msg', 'Added — make it yours before you post it.', 'ok');
       } else {
         setMsg('assist-msg', 'That didn’t work just now. Your text is unchanged — try again in a moment.', 'err');
@@ -1453,11 +1619,602 @@ function selectTab(name) {
     $('tab-' + t).classList.toggle('active', t === name);
     $('pane-' + t).classList.toggle('hidden', t !== name);
   }
+  // The Lessons tab is a workstation: it alone takes the full
+  // width of the window. Every other tab keeps the desk's measure.
+  wsSyncWidth();
+  if (name === 'lessons') wsMaybeInit();
 }
 $('tab-lessons').addEventListener('click', () => selectTab('lessons'));
 $('tab-questions').addEventListener('click', () => selectTab('questions'));
 $('tab-events').addEventListener('click', () => selectTab('events'));
 $('tab-announcements').addEventListener('click', () => selectTab('announcements'));
+
+/* ---------- workstation width ----------
+   The Lessons tab is a workstation: while a leader is on it,
+   the desk takes the full width of the window. Every other
+   tab, the member home and the Church side keep the desk's
+   measure. */
+function wsSyncWidth() {
+  const on = S.side === 'youth' &&
+    !$('desk').classList.contains('hidden') &&
+    $('tab-lessons').classList.contains('active');
+  document.querySelector('.wrap').classList.toggle('wide', !!on);
+}
+
+/* ================= LESSON WORKSTATION =================
+   Study tools flanking the lesson editor (leaders only — the
+   rails live inside the leader desk, and nothing here is
+   fetched until a leader first opens the Lessons tab). Everything reads
+   from the Free Use Bible API (bible.helloao.org): public-domain
+   texts (BSB, WEB, KJV), OpenBible.info cross-references
+   (CC BY 4.0), public-domain commentaries, the Berean
+   Interlinear (public domain) and STEPBible brief lexicons
+   (CC BY 4.0). No keys, no account. Every panel fails on its
+   own — a dead lookup shows a note in that panel and never
+   touches the editor, the drafts or the publish flow. -------- */
+
+/* ---------- word count -> reading time ---------- */
+function lessonWordCount() {
+  const t = $('lf-body').value.trim();
+  return t ? t.split(/\s+/).length : 0;
+}
+function updateWordCount() {
+  const n = lessonWordCount();
+  const rate = parseInt($('lf-wpm').value, 10) || 130;
+  const mins = Math.round(n / rate);
+  $('lf-words').textContent =
+    n + (n === 1 ? ' word' : ' words') + ' · ≈ ' + mins + ' min at ' + rate + ' wpm';
+}
+$('lf-body').addEventListener('input', updateWordCount);
+$('lf-wpm').addEventListener('change', updateWordCount);
+
+/* ---------- references ---------- */
+const WS_BOOK_LIST = [
+  ['GEN', 'Genesis', 'gen'], ['EXO', 'Exodus', 'exod'], ['LEV', 'Leviticus', 'lev'],
+  ['NUM', 'Numbers', 'num'], ['DEU', 'Deuteronomy', 'deut'], ['JOS', 'Joshua', 'josh'],
+  ['JDG', 'Judges', 'judg'], ['RUT', 'Ruth', 'ruth'], ['1SA', '1 Samuel', '1 sam'],
+  ['2SA', '2 Samuel', '2 sam'], ['1KI', '1 Kings', '1 kin'], ['2KI', '2 Kings', '2 kin'],
+  ['1CH', '1 Chronicles', '1 chr'], ['2CH', '2 Chronicles', '2 chr'], ['EZR', 'Ezra', 'ezra'],
+  ['NEH', 'Nehemiah', 'neh'], ['EST', 'Esther', 'esth'], ['JOB', 'Job', 'job'],
+  ['PSA', 'Psalms', 'ps|psa|psalm'], ['PRO', 'Proverbs', 'prov'], ['ECC', 'Ecclesiastes', 'eccl'],
+  ['SNG', 'Song of Songs', 'song|song of solomon|canticles'], ['ISA', 'Isaiah', 'isa'],
+  ['JER', 'Jeremiah', 'jer'], ['LAM', 'Lamentations', 'lam'], ['EZK', 'Ezekiel', 'ezek'],
+  ['DAN', 'Daniel', 'dan'], ['HOS', 'Hosea', 'hos'], ['JOL', 'Joel', 'joel'],
+  ['AMO', 'Amos', 'amos'], ['OBA', 'Obadiah', 'obad'], ['JON', 'Jonah', 'jonah'],
+  ['MIC', 'Micah', 'mic'], ['NAM', 'Nahum', 'nah'], ['HAB', 'Habakkuk', 'hab'],
+  ['ZEP', 'Zephaniah', 'zeph'], ['HAG', 'Haggai', 'hag'], ['ZEC', 'Zechariah', 'zech'],
+  ['MAL', 'Malachi', 'mal'], ['MAT', 'Matthew', 'matt|mt'], ['MRK', 'Mark', 'mk'],
+  ['LUK', 'Luke', 'lk'], ['JHN', 'John', 'jn'], ['ACT', 'Acts', 'acts'],
+  ['ROM', 'Romans', 'rom'], ['1CO', '1 Corinthians', '1 cor'], ['2CO', '2 Corinthians', '2 cor'],
+  ['GAL', 'Galatians', 'gal'], ['EPH', 'Ephesians', 'eph'], ['PHP', 'Philippians', 'phil'],
+  ['COL', 'Colossians', 'col'], ['1TH', '1 Thessalonians', '1 thess'], ['2TH', '2 Thessalonians', '2 thess'],
+  ['1TI', '1 Timothy', '1 tim'], ['2TI', '2 Timothy', '2 tim'], ['TIT', 'Titus', 'tit'],
+  ['PHM', 'Philemon', 'philem'], ['HEB', 'Hebrews', 'heb'], ['JAS', 'James', 'jas'],
+  ['1PE', '1 Peter', '1 pet'], ['2PE', '2 Peter', '2 pet'], ['1JN', '1 John', '1 jn'],
+  ['2JN', '2 John', '2 jn'], ['3JN', '3 John', '3 jn'], ['JUD', 'Jude', 'jude'],
+  ['REV', 'Revelation', 'rev'],
+];
+const WS_BOOK_NAME = {};
+const WS_BOOK_ALIAS = {};
+for (const [id, name, aliases] of WS_BOOK_LIST) {
+  WS_BOOK_NAME[id] = name;
+  WS_BOOK_ALIAS[name.toLowerCase()] = id;
+  WS_BOOK_ALIAS[name.toLowerCase().replace(/\s+/g, '')] = id;
+  if (aliases) {
+    for (const a of aliases.split('|')) {
+      WS_BOOK_ALIAS[a] = id;
+      WS_BOOK_ALIAS[a.replace(/\s+/g, '')] = id;
+    }
+  }
+}
+/* "John 10:11–18", "Psalm 23", "1 Jn 1:9" -> {book, chapter, vStart, vEnd}.
+   vStart null means the whole chapter. Unreadable -> null. */
+function wsParseRef(raw) {
+  if (!raw) return null;
+  let s = String(raw).trim().toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/'/g, '');
+  s = s.replace(/\s+/g, ' ');
+  s = s.replace(/^(first|second|third)\s+/, (m, p) => ({ first: '1 ', second: '2 ', third: '3 ' })[p]);
+  s = s.replace(/^(iii|ii|i)\s+/, (m, p) => ({ i: '1 ', ii: '2 ', iii: '3 ' })[p]);
+  const m = s.match(/^([1-3]?\s?[a-z][a-z .]*?)\s+(\d+)(?:\s*[:.]\s*(\d+))?(?:\s*[-\u2013\u2014]\s*(?:(\d+)\s*[:.]\s*)?(\d+))?\s*$/);
+  if (!m) return null;
+  const bookKey = m[1].replace(/\./g, '').trim();
+  const book = WS_BOOK_ALIAS[bookKey] || WS_BOOK_ALIAS[bookKey.replace(/\s+/g, '')];
+  if (!book) return null;
+  const chapter = parseInt(m[2], 10);
+  const vStart = m[3] ? parseInt(m[3], 10) : null;
+  let vEnd = vStart;
+  if (m[5]) {
+    const endCh = m[4] ? parseInt(m[4], 10) : chapter;
+    vEnd = endCh === chapter ? parseInt(m[5], 10) : 9999;
+  }
+  if (vStart !== null && vEnd !== null && vEnd < vStart) vEnd = vStart;
+  return { book, chapter, vStart, vEnd };
+}
+function wsRefLabel(p) {
+  let s = WS_BOOK_NAME[p.book] + ' ' + p.chapter;
+  if (p.vStart) {
+    s += ':' + p.vStart;
+    if (p.vEnd && p.vEnd !== p.vStart && p.vEnd !== 9999) s += '\u2013' + p.vEnd;
+  }
+  return s;
+}
+
+/* ---------- workstation state + data ---------- */
+const WS_API = 'https://bible.helloao.org/api';
+const WS_TRANS_NAME = {
+  BSB: 'Berean Standard Bible', ENGWEBP: 'World English Bible', eng_kjv: 'King James Version',
+};
+const WS = {
+  inited: false,
+  passage: null,
+  seqReader: 0, seqXref: 0, seqComm: 0, seqChips: 0,
+  cache: new Map(),        // url -> Promise<json> (failures are evicted)
+  interlinear: new Map(),  // 'BOOK chapter' -> Promise<json>
+  lexIndex: null,          // Promise<entries[]> — the 2 MB lexicon index, lazy
+};
+function wsJson(url) {
+  if (!WS.cache.has(url)) {
+    const p = fetch(url).then((r) => {
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    });
+    p.catch(() => WS.cache.delete(url));
+    WS.cache.set(url, p);
+  }
+  return WS.cache.get(url);
+}
+function wsInterlinear(p) {
+  const key = p.book + ' ' + p.chapter;
+  if (!WS.interlinear.has(key)) {
+    WS.interlinear.set(key, wsJson(WS_API + '/d/bsb-interlinear/' + p.book + '/' + p.chapter + '.json'));
+  }
+  return WS.interlinear.get(key);
+}
+/* A long text that starts folded, with a Read more toggle. */
+function wsTextBlock(text, cls) {
+  const wrap = h('div');
+  const body = h('div', cls, text);
+  wrap.appendChild(body);
+  if (text.length > 650) {
+    body.classList.add('ws-clamp');
+    const btn = h('button', 'ws-more', 'Read more');
+    btn.type = 'button';
+    btn.addEventListener('click', () => {
+      const clamped = body.classList.toggle('ws-clamp');
+      btn.textContent = clamped ? 'Read more' : 'Show less';
+    });
+    wrap.appendChild(btn);
+  }
+  return wrap;
+}
+/* helloao verse content is strings plus small objects ({text} runs,
+   {noteId} footnote markers). Only readable text is read aloud. */
+function wsFragText(frag) {
+  if (typeof frag === 'string') return frag;
+  if (frag && typeof frag.text === 'string') return frag.text;
+  return '';
+}
+
+/* ---------- following the lesson's passage ---------- */
+function wsMaybeInit() {
+  if (WS.inited || !isLeaderHere()) return;
+  WS.inited = true;
+  try { wsFollowPassage(); } catch (e) { /* the editor never depends on the tools */ }
+}
+let wsFollowTimer = null;
+function wsFollowPassage() {
+  if (!WS.inited) return;
+  const raw = $('lf-passage').value.trim();
+  if (!raw) { wsClearPassage(); return; }
+  const p = wsParseRef(raw);
+  if (p) wsSetPassage(p);
+}
+$('lf-passage').addEventListener('input', () => {
+  if (!WS.inited) return;
+  clearTimeout(wsFollowTimer);
+  wsFollowTimer = setTimeout(wsFollowPassage, 700);
+});
+$('lf-passage').addEventListener('change', wsFollowPassage);
+function wsSamePassage(a, b) {
+  return !!a && !!b && a.book === b.book && a.chapter === b.chapter &&
+    a.vStart === b.vStart && a.vEnd === b.vEnd;
+}
+function wsSetPassage(p) {
+  if (wsSamePassage(WS.passage, p)) return;
+  WS.passage = p;
+  wsRenderReader(++WS.seqReader);
+  wsRenderXrefs(++WS.seqXref);
+  wsRenderCommentaries(++WS.seqComm);
+  wsRenderChips(++WS.seqChips);
+}
+function wsClearPassage() {
+  if (!WS.passage) return;
+  WS.passage = null;
+  WS.seqReader++; WS.seqXref++; WS.seqComm++; WS.seqChips++;
+  $('ws-reader-zone').replaceChildren(h('p', 'hint',
+    'The passage from your lesson appears here — or look one up above. The study tools follow the passage.'));
+  $('ws-xref-zone').replaceChildren(h('p', 'hint',
+    'Passages that speak to this one, in the Treasury of Scripture Knowledge tradition. Tap one to read it.'));
+  $('ws-comm-zone').replaceChildren(h('p', 'hint',
+    'Two trusted voices on the passage, each labelled with its era — servants for your study, never masters of it.'));
+  $('ws-chips-zone').replaceChildren();
+  $('ws-prev-ch').classList.add('hidden');
+  $('ws-next-ch').classList.add('hidden');
+}
+
+/* ---------- panel collapse (every width; the phone relies on it) ---------- */
+document.querySelectorAll('[data-ws-toggle]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const panel = $(btn.getAttribute('data-ws-toggle'));
+    if (!panel) return;
+    const closed = panel.classList.toggle('closed');
+    const chev = btn.querySelector('.ws-chev');
+    if (chev) chev.textContent = closed ? '\u25B8' : '\u25BE';
+  });
+});
+
+/* ---------- left rail: the passage ---------- */
+$('ws-ref-form').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const p = wsParseRef($('ws-ref').value);
+  if (!p) {
+    $('ws-reader-zone').replaceChildren(h('p', 'hint',
+      'That reference could not be read — try \u201CJohn 10:11\u201D or \u201CPsalm 23\u201D.'));
+    return;
+  }
+  wsSetPassage(p);
+});
+$('ws-trans').addEventListener('change', () => { if (WS.passage) wsRenderReader(++WS.seqReader); });
+$('ws-trans2').addEventListener('change', () => {
+  if (WS.passage && $('ws-parallel').checked) wsRenderReader(++WS.seqReader);
+});
+$('ws-parallel').addEventListener('change', () => {
+  $('ws-trans2').classList.toggle('hidden', !$('ws-parallel').checked);
+  if (WS.passage) wsRenderReader(++WS.seqReader);
+});
+function wsRenderChapterInto(zone, data, p, transId) {
+  zone.appendChild(h('div', 'ws-passage', wsRefLabel(p)));
+  zone.appendChild(h('p', 'ws-trans-name', WS_TRANS_NAME[transId] || transId));
+  const reader = h('div', 'ws-reader');
+  let para = null;
+  const newPara = () => { para = h('p'); reader.appendChild(para); };
+  newPara();
+  for (const item of (data.chapter && data.chapter.content) || []) {
+    if (item.type === 'heading') {
+      reader.appendChild(h('div', 'ws-vhead', (item.content || []).map(wsFragText).join('')));
+      newPara();
+    } else if (item.type === 'line_break') {
+      newPara();
+    } else if (item.type === 'verse') {
+      const span = h('span', 'ws-verse');
+      span.dataset.v = item.number;
+      if (p.vStart && item.number >= p.vStart && item.number <= (p.vEnd || p.vStart)) {
+        span.classList.add('ws-hl');
+      }
+      span.appendChild(h('sup', 'ws-vn', String(item.number)));
+      span.appendChild(document.createTextNode((item.content || []).map(wsFragText).join('') + ' '));
+      para.appendChild(span);
+    }
+  }
+  for (const child of [...reader.children]) {
+    if (child.tagName === 'P' && !child.textContent.trim()) child.remove();
+  }
+  zone.appendChild(reader);
+}
+async function wsRenderReader(seq) {
+  const p = WS.passage;
+  if (!p) return;
+  const zone = $('ws-reader-zone');
+  zone.replaceChildren(h('p', 'hint', 'Loading ' + wsRefLabel(p) + '…'));
+  const trans = $('ws-trans').value;
+  try {
+    const data = await wsJson(WS_API + '/' + trans + '/' + p.book + '/' + p.chapter + '.json');
+    if (seq !== WS.seqReader) return;
+    zone.replaceChildren();
+    wsRenderChapterInto(zone, data, p, trans);
+    if ($('ws-parallel').checked) {
+      const t2 = $('ws-trans2').value;
+      if (t2 !== trans) {
+        try {
+          const d2 = await wsJson(WS_API + '/' + t2 + '/' + p.book + '/' + p.chapter + '.json');
+          if (seq !== WS.seqReader) return;
+          wsRenderChapterInto(zone, d2, p, t2);
+        } catch (e) {
+          zone.appendChild(h('p', 'hint', 'The parallel translation could not load just now.'));
+        }
+      }
+    }
+    wsUpdateChapterNav(data);
+    const hl = zone.querySelector('.ws-verse.ws-hl');
+    if (hl) {
+      const rail = $('ws-left');
+      rail.scrollTop += hl.getBoundingClientRect().top - rail.getBoundingClientRect().top - 70;
+    }
+  } catch (e) {
+    if (seq !== WS.seqReader) return;
+    zone.replaceChildren(h('p', 'hint',
+      'The Bible text could not load just now. Check your connection and try again — your lesson is unaffected.'));
+    $('ws-prev-ch').classList.add('hidden');
+    $('ws-next-ch').classList.add('hidden');
+  }
+}
+function wsUpdateChapterNav(data) {
+  const set = (id, ref) => {
+    const btn = $(id);
+    if (ref && ref.book && WS_BOOK_NAME[ref.book]) {
+      btn.classList.remove('hidden');
+      btn.querySelector('span').textContent = WS_BOOK_NAME[ref.book] + ' ' + ref.chapter;
+      btn.onclick = () => wsSetPassage({ book: ref.book, chapter: ref.chapter, vStart: null, vEnd: null });
+    } else {
+      btn.classList.add('hidden');
+      btn.onclick = null;
+    }
+  };
+  set('ws-prev-ch', data.previousChapterReference);
+  set('ws-next-ch', data.nextChapterReference);
+}
+
+/* ---------- left rail: cross-references ---------- */
+async function wsRenderXrefs(seq) {
+  const p = WS.passage;
+  if (!p) return;
+  const zone = $('ws-xref-zone');
+  zone.replaceChildren(h('p', 'hint', 'Loading cross-references…'));
+  try {
+    const data = await wsJson(WS_API + '/d/open-cross-ref/' + p.book + '/' + p.chapter + '.json');
+    if (seq !== WS.seqXref) return;
+    const vFrom = p.vStart || 1;
+    const vTo = p.vEnd || 9999;
+    const best = new Map();
+    for (const row of (data.chapter && data.chapter.content) || []) {
+      if (row.verse < vFrom || row.verse > vTo) continue;
+      for (const r of row.references || []) {
+        if (r.book === p.book && r.chapter === p.chapter && r.verse >= vFrom && r.verse <= vTo) continue;
+        const key = r.book + '|' + r.chapter + '|' + r.verse + '|' + (r.endVerse || r.verse);
+        if (!best.has(key) || best.get(key).score < r.score) best.set(key, r);
+      }
+    }
+    const refs = [...best.values()].sort((a, b) => b.score - a.score).slice(0, 30);
+    zone.replaceChildren();
+    if (!refs.length) {
+      zone.appendChild(h('p', 'hint', 'No cross-references are recorded for this passage.'));
+      return;
+    }
+    const list = h('div', 'ws-xref-list');
+    for (const r of refs) {
+      const label = WS_BOOK_NAME[r.book] + ' ' + r.chapter + ':' + r.verse +
+        (r.endVerse && r.endVerse !== r.verse ? '\u2013' + r.endVerse : '');
+      const b = h('button', 'ws-xref', label);
+      b.type = 'button';
+      b.addEventListener('click', () => {
+        $('ws-ref').value = label;
+        wsSetPassage({ book: r.book, chapter: r.chapter, vStart: r.verse, vEnd: r.endVerse || r.verse });
+      });
+      list.appendChild(b);
+    }
+    zone.appendChild(list);
+  } catch (e) {
+    if (seq !== WS.seqXref) return;
+    zone.replaceChildren(h('p', 'hint', 'Cross-references could not load just now. Your lesson is unaffected.'));
+  }
+}
+
+/* ---------- right rail: commentaries ---------- */
+const WS_COMMENTARIES = [
+  { id: 'matthew-henry', label: 'Matthew Henry', era: 'Complete Commentary on the Whole Bible · early 1700s' },
+  { id: 'jamieson-fausset-brown', label: 'Jamieson, Fausset & Brown', era: 'Commentary, Critical, Experimental and Practical · 1871' },
+];
+function wsCommBlock(text, onLabel) {
+  const wrap = h('div', 'ws-comm');
+  wrap.appendChild(h('p', 'ws-on', onLabel));
+  wrap.appendChild(wsTextBlock(text, 'ws-text'));
+  return wrap;
+}
+async function wsRenderCommentaries(seq) {
+  const p = WS.passage;
+  if (!p) return;
+  const zone = $('ws-comm-zone');
+  zone.replaceChildren();
+  const vFrom = p.vStart || 1;
+  const vTo = p.vEnd || 9999;
+  for (const w of WS_COMMENTARIES) {
+    const block = h('div', 'ws-work');
+    block.appendChild(h('p', 'ws-work-label', w.label));
+    block.appendChild(h('p', 'ws-work-era', w.era));
+    const bodyZone = h('div');
+    bodyZone.appendChild(h('p', 'hint', 'Loading…'));
+    block.appendChild(bodyZone);
+    zone.appendChild(block);
+    try {
+      const data = await wsJson(WS_API + '/c/' + w.id + '/' + p.book + '/' + p.chapter + '.json');
+      if (seq !== WS.seqComm) return;
+      bodyZone.replaceChildren();
+      const lastV = data.numberOfVerses || 9999;
+      const items = ((data.chapter && data.chapter.content) || [])
+        .filter((i) => i.type === 'verse')
+        .sort((a, b) => a.number - b.number);
+      let shown = 0;
+      const intro = data.chapter && typeof data.chapter.introduction === 'string'
+        ? data.chapter.introduction.trim() : '';
+      if (intro && (!p.vStart || p.vStart === 1)) {
+        bodyZone.appendChild(wsCommBlock(intro, 'Chapter introduction'));
+        shown++;
+      }
+      items.forEach((item, i) => {
+        const start = item.number;
+        const end = i + 1 < items.length ? items[i + 1].number - 1 : lastV;
+        if (end < vFrom || start > vTo) return;
+        const text = (item.content || []).map(wsFragText).join('').trim();
+        if (!text) return;
+        const on = end === start ? 'On verse ' + start : 'On verses ' + start + '\u2013' + Math.min(end, lastV);
+        bodyZone.appendChild(wsCommBlock(text, on));
+        shown++;
+      });
+      if (!shown) bodyZone.appendChild(h('p', 'hint', 'No comment on this passage in this work.'));
+    } catch (e) {
+      if (seq !== WS.seqComm) return;
+      bodyZone.replaceChildren(h('p', 'hint', 'This commentary could not load just now.'));
+    }
+  }
+}
+
+/* ---------- right rail: word study ---------- */
+async function wsRenderChips(seq) {
+  const p = WS.passage;
+  const zone = $('ws-chips-zone');
+  zone.replaceChildren();
+  if (!p) return;
+  try {
+    const data = await wsInterlinear(p);
+    if (seq !== WS.seqChips) return;
+    const vFrom = p.vStart || 1;
+    const vTo = p.vEnd || 9999;
+    const seen = new Map();
+    for (const row of (data.chapter && data.chapter.content) || []) {
+      if (row.verse < vFrom || row.verse > vTo) continue;
+      for (const w of row.words || []) {
+        if (w.strongs && !seen.has(w.strongs)) seen.set(w.strongs, w);
+      }
+    }
+    const words = [...seen.values()].slice(0, 80);
+    if (!words.length) return;
+    zone.appendChild(h('p', 'hint', 'Words in this passage — tap one to study it:'));
+    const chips = h('div', 'ws-chips');
+    for (const w of words) {
+      const c = h('button', 'ws-chip');
+      c.type = 'button';
+      c.appendChild(document.createTextNode(w.gloss || w.text || ''));
+      c.appendChild(h('span', 'ws-chip-s', w.strongs));
+      c.title = (w.transliteration || '') + (w.parsingFull ? ' · ' + w.parsingFull : '');
+      c.addEventListener('click', () => { $('ws-word').value = w.strongs; wsWordLookup(w.strongs); });
+      chips.appendChild(c);
+    }
+    zone.appendChild(chips);
+  } catch (e) { /* the chips are a bonus; the lookup box still works */ }
+}
+function wsNormalizeStrongs(raw) {
+  const m = String(raw || '').trim().toUpperCase().match(/^([GH])0*(\d{1,4})$/);
+  if (!m) return null;
+  return m[1] + String(parseInt(m[2], 10)).padStart(4, '0');
+}
+async function wsLexiconIndex() {
+  if (!WS.lexIndex) {
+    WS.lexIndex = wsJson(WS_API + '/d/stepbible-lexicon/lexicon.json')
+      .then((d) => d.lexicon || []);
+  }
+  return WS.lexIndex;
+}
+$('ws-word-form').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  wsWordLookup($('ws-word').value);
+});
+async function wsWordLookup(raw) {
+  const zone = $('ws-word-zone');
+  const q = String(raw || '').trim();
+  if (!q) return;
+  zone.replaceChildren(h('p', 'hint', 'Looking up \u201C' + q + '\u201D…'));
+  try {
+    let ids = [];
+    const sid = wsNormalizeStrongs(q);
+    if (sid) {
+      ids = [sid];
+    } else if (/[\u0370-\u05ff]/.test(q)) {
+      const idx = await wsLexiconIndex();
+      ids = idx.filter((e) => e.name === q || (e.name && e.name.startsWith(q)))
+        .slice(0, 5).map((e) => e.id);
+      if (!ids.length) {
+        zone.replaceChildren(h('p', 'hint',
+          'No word like that was found in the brief lexicons. Try a Strong\u2019s number, e.g. G25.'));
+        return;
+      }
+    } else {
+      const p = WS.passage;
+      if (!p) {
+        zone.replaceChildren(h('p', 'hint',
+          'Open a passage first — or type a Strong\u2019s number like G25 or H430.'));
+        return;
+      }
+      const data = await wsInterlinear(p);
+      const want = q.toLowerCase();
+      const found = new Map();
+      for (const row of (data.chapter && data.chapter.content) || []) {
+        for (const w of row.words || []) {
+          if (!w.strongs) continue;
+          const g = (w.gloss || '').toLowerCase().replace(/[^a-z' -]/g, '').replace(/\s+/g, ' ').trim();
+          if (g === want || g.split(/[\s-]+/).includes(want)) {
+            if (!found.has(w.strongs)) found.set(w.strongs, w);
+          }
+        }
+      }
+      ids = [...found.keys()].slice(0, 6);
+      if (!ids.length) {
+        zone.replaceChildren(h('p', 'hint',
+          '\u201C' + q + '\u201D does not appear in ' + wsRefLabel(p) +
+          ' in the Berean text. Try a word from the passage, or a Strong\u2019s number.'));
+        return;
+      }
+    }
+    const entries = [];
+    for (const id of ids) {
+      try {
+        entries.push(await wsJson(WS_API + '/d/stepbible-lexicon/lexicon/' + id + '.json'));
+      } catch (e) { /* a missing entry is skipped, never fatal */ }
+    }
+    if (!entries.length) {
+      zone.replaceChildren(h('p', 'hint', 'That lookup could not be completed just now.'));
+      return;
+    }
+    zone.replaceChildren();
+    for (const e of entries) zone.appendChild(await wsRenderEntry(e));
+  } catch (err) {
+    zone.replaceChildren(h('p', 'hint',
+      'The word study could not load just now. Check your connection and try again — your lesson is unaffected.'));
+  }
+}
+async function wsRenderEntry(data) {
+  const entry = data.entry || {};
+  const wrap = h('div', 'ws-entry');
+  const senses = entry.senses && entry.senses.length ? entry.senses : [entry];
+  for (const s of senses) {
+    const head = h('div');
+    head.appendChild(h('span', 'ws-lemma', s.lemma || entry.id || ''));
+    if (s.transliteration) head.appendChild(h('span', 'ws-translit', s.transliteration));
+    wrap.appendChild(head);
+    wrap.appendChild(h('p', 'ws-pos',
+      (entry.id || s.id || '') +
+      (s.partOfSpeech ? ' · ' + s.partOfSpeech : '') +
+      (entry.language ? ' · ' + (entry.language === 'greek' ? 'Greek' : 'Hebrew') : '')));
+    if (s.gloss) wrap.appendChild(h('p', 'ws-gloss', s.gloss));
+    if (s.definition) wrap.appendChild(wsTextBlock(s.definition.trim(), 'ws-def'));
+  }
+  /* Where this word occurs in the chapter on the left — the
+     whole-Bible concordance list is not something this data
+     source serves, so occurrences are honestly chapter-scoped. */
+  const p = WS.passage;
+  if (p && entry.id) {
+    try {
+      const data2 = await wsInterlinear(p);
+      const verses = [];
+      for (const row of (data2.chapter && data2.chapter.content) || []) {
+        if ((row.words || []).some((w) => w.strongs === entry.id)) verses.push(row.verse);
+      }
+      if (verses.length) {
+        const occ = h('p', 'ws-occ');
+        occ.appendChild(document.createTextNode('In ' + WS_BOOK_NAME[p.book] + ' ' + p.chapter + ': '));
+        verses.forEach((v, i) => {
+          if (i) occ.appendChild(document.createTextNode(', '));
+          const b = h('button', null, 'v. ' + v);
+          b.type = 'button';
+          b.addEventListener('click', () =>
+            wsSetPassage({ book: p.book, chapter: p.chapter, vStart: v, vEnd: v }));
+          occ.appendChild(b);
+        });
+        wrap.appendChild(occ);
+      }
+    } catch (e) { /* occurrences are a bonus */ }
+  }
+  return wrap;
+}
 
 /* ================= MEMBER HOME ================= */
 /* ---------- member: parents' giving card ----------
