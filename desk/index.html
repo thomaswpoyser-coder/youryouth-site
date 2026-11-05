@@ -543,11 +543,19 @@ async function loadAccount() {
     return;
   }
   const ids = rows.map((r) => r.group_id);
-  const grp = await client.from('groups').select('id, name, join_code').in('id', ids);
+  // Mirror kind filter: this desk is Your Youth's, so church groups
+  // (kind = 'church', Your People migration 019) never appear here.
+  // A row with no kind reads as a youth group, as every group did
+  // before the church app existed; if the column itself is missing
+  // the read is retried without it, the desk's pre-019 behaviour.
+  let grp = await client.from('groups').select('id, name, join_code, kind').in('id', ids);
+  if (grp.error && /kind/.test(grp.error.message)) {
+    grp = await client.from('groups').select('id, name, join_code').in('id', ids);
+  }
   const byId = {};
   for (const g of grp.data || []) byId[g.id] = g;
   S.memberships = rows
-    .filter((r) => byId[r.group_id])
+    .filter((r) => byId[r.group_id] && byId[r.group_id].kind !== 'church')
     .map((r) => ({ group: byId[r.group_id], role: r.role }));
   if (S.memberships.length === 0) { showView('view-nogroup'); return; }
 
