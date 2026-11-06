@@ -178,6 +178,7 @@ function render(data) {
     lockImg.addEventListener('error', () => lockup.classList.add('hidden'));
   }
   const mainTime = firstLine(data.serviceTimes);
+  const placeLine = firstLine(data.address);
   $('hero-time').textContent = mainTime;
   $('hero-time').classList.toggle('hidden', !mainTime);
 
