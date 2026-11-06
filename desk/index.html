@@ -1063,6 +1063,7 @@ const S = {
   readerId: null,            // lesson open in the member reader
   assistOk: null,            // probe result (null = not probed yet)
   assistWhy: '',             // receipt for a false verdict (status/error)
+  accessToken: '',           // freshest session access token (raw fetch callers)
   recovery: false,           // true while a password-reset link is being answered
 };
 function currentMembership() {
@@ -1323,6 +1324,12 @@ if (/type=recovery/.test(window.location.hash || '')) S.recovery = true;
 let linkError = /error(_description)?=/.test(window.location.hash || '');
 
 client.auth.onAuthStateChange((event, session) => {
+  /* Keep the desk's own copy of the freshest access token current
+     (see "session token for raw function calls" below): the raw
+     fetch callers spend this copy instead of racing the SDK's
+     storage read. Signed out means the copy goes too. */
+  noteSessionToken(session);
+  if (event === 'SIGNED_OUT') S.accessToken = '';
   if (event === 'PASSWORD_RECOVERY' && session && session.user) {
     S.recovery = true;
     S.user = session.user;
@@ -1702,17 +1709,54 @@ $('lf-delete').addEventListener('click', async () => {
   setMsg('lessons-msg', 'Lesson deleted.', 'ok');
 });
 
-/* ---------- sermon assist (same function the app calls) ---------- */
-async function callAssist(payload) {
-  const { data: sess } = await client.auth.getSession();
-  const token = sess && sess.session ? sess.session.access_token : '';
-  if (!token) {
-    /* No usable session yet: the assist function answers a leader's
-       own token only, so sending the anon key (or an empty bearer)
-       earns a 401 that reads as "unavailable". Report "no session"
-       instead — callers treat it as "not yet", never as a failure. */
-    return { status: 0, json: null, noSession: true };
+/* ---------- session token for raw function calls ----------
+   The desk mostly rides the SDK, but the assist and site-check
+   calls fetch by hand and need the leader's access token. Getting
+   it used to mean awaiting the SDK's session read inside the same
+   try whose catch became a "network" verdict — and that read can
+   THROW here: this desk and the public site run two supabase-js
+   clients over one shared storage key (plus duplicate desk tabs),
+   so auth-lock contention or a rotated-token refresh racing
+   underneath makes the read fail, and a failure to READ the token
+   was misread as the service being down (the Nov 6, 2026
+   "(check network)" sermon assist outage — the function was fine
+   the whole time). So: the desk keeps the freshest token it has
+   been handed (the boot and the auth-state handler both receive
+   session objects; noteSessionToken is fed from there), callers
+   spend that copy first, and the SDK read survives only as a
+   contained fallback whose failure means "not yet", never a
+   verdict. */
+function noteSessionToken(session) {
+  if (session && session.access_token) S.accessToken = session.access_token;
+}
+function cachedAccessToken() {
+  const t = S.accessToken;
+  if (!t) return '';
+  /* Spend the cached token only while its own expiry says it is
+     good, with 30s of margin for clock skew and the call itself. */
+  try {
+    let seg = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (seg.length % 4) seg += '=';
+    const claims = JSON.parse(atob(seg));
+    if (claims && claims.exp && claims.exp * 1000 > Date.now() + 30000) return t;
+  } catch (e) { /* an unreadable token is no token */ }
+  return '';
+}
+async function deskAccessToken() {
+  const cached = cachedAccessToken();
+  if (cached) return cached;
+  try {
+    const { data: sess } = await client.auth.getSession();
+    const token = sess && sess.session ? sess.session.access_token : '';
+    if (token) S.accessToken = token;
+    return token || '';
+  } catch (e) {
+    /* A thrown read is "not yet" (see the note above): it yields
+       no token, and no opinion about anything else. */
+    return '';
   }
+}
+async function assistFetch(payload, token) {
   const resp = await fetch(SUPABASE_URL + '/functions/v1/assist', {
     method: 'POST',
     headers: {
@@ -1725,6 +1769,30 @@ async function callAssist(payload) {
   let json = null;
   try { json = await resp.json(); } catch (e) { /* non-JSON answer */ }
   return { status: resp.status, json };
+}
+
+/* ---------- sermon assist (same function the app calls) ---------- */
+async function callAssist(payload) {
+  let token = await deskAccessToken();
+  if (!token) {
+    /* No usable session yet: the assist function answers a leader's
+       own token only, so sending the anon key (or an empty bearer)
+       earns a 401 that reads as "unavailable". Report "no session"
+       instead — callers treat it as "not yet", never as a failure. */
+    return { status: 0, json: null, noSession: true };
+  }
+  try {
+    return await assistFetch(payload, token);
+  } catch (e) {
+    /* The fetch itself threw. That is the ONLY way a "network"
+       receipt is earned, and not on the first throw: wait a beat,
+       re-read the token through the same safe path, and try once
+       more. Only a second throw propagates to the caller's catch. */
+    await new Promise((r) => setTimeout(r, 600));
+    token = await deskAccessToken();
+    if (!token) return { status: 0, json: null, noSession: true };
+    return await assistFetch(payload, token);
+  }
 }
 /* The receipt for a failed assist verdict: the HTTP status when a
    response arrived, plus the function's own error word when it
@@ -3394,8 +3462,12 @@ $('ys-claim').addEventListener('click', async () => {
   const want = ($('ys-slug').value || '').trim().toLowerCase();
   if (!/^[a-z0-9][a-z0-9-]{2,39}$/.test(want)) { setMsg('ys-msg', 'Use 3–40 characters: small letters, numbers and dashes.', 'err'); return; }
   setMsg('ys-msg', 'Checking “' + want + '”…');
-  const { data: sess } = await client.auth.getSession();
-  const token = sess && sess.session ? sess.session.access_token : '';
+  /* The desk's safe token path (see "session token for raw
+     function calls"): a bare session read here could throw on the
+     shared-storage auth lock and strand this click on "Checking…"
+     forever; the safe path just yields no token instead, and the
+     check below reads the function's answer as before. */
+  const token = await deskAccessToken();
   let data = null;
   try {
     const r = await fetch(SUPABASE_URL + '/functions/v1/youth-site?check=' + encodeURIComponent(want) + '&for=' + encodeURIComponent(m.group.id),
@@ -4028,8 +4100,7 @@ $('clf-delete').addEventListener('click', async () => {
 
 /* ---------- sermon assist (same function the app calls) ---------- */
 async function callChurchAssist(payload) {
-  const { data: sess } = await client.auth.getSession();
-  const token = sess && sess.session ? sess.session.access_token : '';
+  let token = await deskAccessToken();
   if (!token) {
     /* No usable session yet: the assist function answers a leader's
        own token only, so sending the anon key (or an empty bearer)
@@ -4037,18 +4108,18 @@ async function callChurchAssist(payload) {
        instead — callers treat it as "not yet", never as a failure. */
     return { status: 0, json: null, noSession: true };
   }
-  const resp = await fetch(SUPABASE_URL + '/functions/v1/assist', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token,
-      'apikey': SUPABASE_ANON_KEY,
-    },
-    body: JSON.stringify(payload),
-  });
-  let json = null;
-  try { json = await resp.json(); } catch (e) { /* non-JSON answer */ }
-  return { status: resp.status, json };
+  try {
+    return await assistFetch(payload, token);
+  } catch (e) {
+    /* The fetch itself threw. That is the ONLY way a "network"
+       receipt is earned, and not on the first throw: wait a beat,
+       re-read the token through the same safe path, and try once
+       more. Only a second throw propagates to the caller's catch. */
+    await new Promise((r) => setTimeout(r, 600));
+    token = await deskAccessToken();
+    if (!token) return { status: 0, json: null, noSession: true };
+    return await assistFetch(payload, token);
+  }
 }
 async function probeChurchAssist() {
   if (S.cAssistOk === true) { renderChurchAssistState(); return; }
@@ -4739,7 +4810,10 @@ async function cwsRenderEntry(data) {
    all three come back empty is anyone shown the sign-in form. */
 async function acquireSession() {
   const first = await client.auth.getSession();
-  if (first.data && first.data.session && first.data.session.user) return first.data.session;
+  if (first.data && first.data.session && first.data.session.user) {
+    noteSessionToken(first.data.session);
+    return first.data.session;
+  }
   const fromEvent = await new Promise((resolve) => {
     let done = false;
     const { data: sub } = client.auth.onAuthStateChange((event, session) => {
@@ -4748,10 +4822,13 @@ async function acquireSession() {
     });
     setTimeout(() => { if (!done) { done = true; try { sub.subscription.unsubscribe(); } catch (e) {} resolve(null); } }, 2500);
   });
-  if (fromEvent) return fromEvent;
+  if (fromEvent) { noteSessionToken(fromEvent); return fromEvent; }
   try {
     const refreshed = await client.auth.refreshSession();
-    if (refreshed.data && refreshed.data.session && refreshed.data.session.user) return refreshed.data.session;
+    if (refreshed.data && refreshed.data.session && refreshed.data.session.user) {
+      noteSessionToken(refreshed.data.session);
+      return refreshed.data.session;
+    }
   } catch (e) { /* no stored session to refresh */ }
   return null;
 }
