@@ -9,6 +9,7 @@
   :root{
     --cream:#FAF8F3; --green:#2E493A; --green-deep:#213829; --gold:#E8C15A;
     --ink:#26312A; --muted:#6E7A71; --card:#FFFFFF; --line:#E4DECF;
+    --accent-text:#2E493A;
     --danger:#B3261E; --ok:#2E6B45; --soft:#F1EDE1;
   }
   *{box-sizing:border-box}
@@ -18,7 +19,7 @@
     font-size:16px;line-height:1.5}
   h1,h2,h3,.wordmark{font-family:Georgia,"Iowan Old Style","Times New Roman",serif}
   .wrap{max-width:1060px;margin:0 auto;padding:24px 20px 64px}
-  .wordmark{display:inline-flex;align-items:center;gap:9px;color:var(--green);
+  .wordmark{display:inline-flex;align-items:center;gap:9px;color:var(--accent-text);
     font-size:26px;font-weight:700;letter-spacing:.2px;text-transform:lowercase}
   .wordmark::before{content:"";width:11px;height:11px;background:var(--gold);
     transform:rotate(45deg);border-radius:2px;flex:none}
@@ -38,7 +39,7 @@
   .btn:hover{background:var(--green-deep)}
   a.btn{text-decoration:none}
   .btn:disabled{opacity:.55;cursor:default}
-  .btn.secondary{background:#fff;color:var(--green)}
+  .btn.secondary{background:#fff;color:var(--accent-text)}
   .btn.secondary:hover{background:var(--soft)}
   .btn.danger{background:#fff;color:var(--danger);border-color:#E3B7B3}
   .btn.danger:hover{background:#FBEEEE}
@@ -56,34 +57,34 @@
   .groupbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 18px}
   .groupbar select{width:auto;min-width:220px;font-weight:600}
   .joincode{font-size:14px;color:var(--muted)}
-  .joincode strong{color:var(--green);letter-spacing:.6px}
+  .joincode strong{color:var(--accent-text);letter-spacing:.6px}
   .tabs{display:flex;gap:8px;margin:0 0 20px;flex-wrap:wrap}
-  .tabs button{background:#fff;border:1px solid var(--line);color:var(--green);
+  .tabs button{background:#fff;border:1px solid var(--line);color:var(--accent-text);
     border-radius:999px;padding:8px 18px;font:inherit;font-weight:600;cursor:pointer}
-  .tabs button.active{background:var(--green);color:#fff;border-color:var(--green)}
+  .tabs button.active{background:var(--green);color:#fff;border-color:var(--accent-text)}
   /* Sermon preparation sits apart: pushed to the far right of the
      row with the platform gold, so the workstation reads as its own
      place, not one more desk tab (founder's brief, Nov 6, 2026). */
-  .tabs button.sermon{margin-left:auto;background:var(--soft);border-color:var(--gold);color:var(--green-deep)}
-  .tabs button.sermon.active{background:var(--green);color:#fff;border-color:var(--green)}
+  .tabs button.sermon{margin-left:auto;background:var(--soft);border-color:var(--gold);color:var(--ink)}
+  .tabs button.sermon.active{background:var(--green);color:#fff;border-color:var(--accent-text)}
   .sidetoggle{display:inline-flex;background:#fff;border:1px solid var(--line);
     border-radius:999px;padding:3px;margin:0 0 18px}
-  .sidetoggle button{background:transparent;border:none;color:var(--green);
+  .sidetoggle button{background:transparent;border:none;color:var(--accent-text);
     border-radius:999px;padding:7px 22px;font:inherit;font-weight:600;cursor:pointer}
   .sidetoggle button.active{background:var(--green);color:#fff}
   .person{display:flex;gap:14px;align-items:flex-start}
   .avatar{width:52px;height:52px;border-radius:50%;flex:none;background:var(--soft);
-    color:var(--green);font-family:Georgia,serif;font-size:21px;line-height:52px;text-align:center;overflow:hidden}
+    color:var(--accent-text);font-family:Georgia,serif;font-size:21px;line-height:52px;text-align:center;overflow:hidden}
   .avatar img{width:52px;height:52px;object-fit:cover;display:block}
   .person .role{color:#7A5B12;font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
   .person .contact{font-size:14.5px;margin-top:3px}
-  .person .contact a{color:var(--green)}
+  .person .contact a{color:var(--accent-text)}
   .grid{display:grid;grid-template-columns:330px 1fr;gap:20px;align-items:start}
   @media (max-width:820px){.grid{grid-template-columns:1fr}}
   .listitem{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);
     border-radius:12px;padding:13px 15px;margin:0 0 10px;cursor:pointer;font:inherit;color:var(--ink)}
   .listitem:hover{border-color:var(--gold)}
-  .listitem.active{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
+  .listitem.active{border-color:var(--accent-text);box-shadow:0 0 0 1px var(--green)}
   .listitem .t{font-weight:700;display:block}
   .listitem .s{color:var(--muted);font-size:13.5px;display:block;margin-top:2px}
   .staticitem{background:#fff;border:1px solid var(--line);border-radius:12px;
@@ -94,20 +95,20 @@
     text-transform:uppercase;border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:2px}
   .badge.draft{background:#F7EBCB;color:#7A5B12}
   .badge.live{background:#DDEBDF;color:var(--ok)}
-  .badge.member{background:var(--soft);color:var(--green)}
+  .badge.member{background:var(--soft);color:var(--accent-text)}
   .bodytext{white-space:pre-wrap;line-height:1.6}
   .closing{border-left:3px solid var(--gold);padding:6px 0 6px 14px;margin:18px 0 0}
-  .closing .ch{font-weight:700;color:var(--green);font-size:13px;text-transform:uppercase;letter-spacing:.6px}
-  .sectiontitle{margin:26px 0 12px;font-size:21px;color:var(--green)}
+  .closing .ch{font-weight:700;color:var(--accent-text);font-size:13px;text-transform:uppercase;letter-spacing:.6px}
+  .sectiontitle{margin:26px 0 12px;font-size:21px;color:var(--accent-text)}
   .sectiontitle:first-child{margin-top:0}
   .assistbox{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:18px 0 4px}
-  .assistbox .ah{font-weight:700;color:var(--green);margin:0 0 8px}
+  .assistbox .ah{font-weight:700;color:var(--accent-text);margin:0 0 8px}
   .assistbox .btn{padding:7px 13px;font-size:14px}
   .banner{background:#FBF3D9;border:1px solid var(--gold);border-radius:12px;padding:14px 17px;margin:0 0 18px}
   footer.foot{margin-top:44px;color:var(--muted);font-size:13.5px;text-align:center}
   .hidden{display:none !important}
   .row-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-  .backlink{background:none;border:none;color:var(--green);font:inherit;font-weight:600;
+  .backlink{background:none;border:none;color:var(--accent-text);font:inherit;font-weight:600;
     cursor:pointer;padding:0 0 10px;text-decoration:underline}
   /* ============ lesson workstation (Lessons tab, leaders) ============
      On a wide screen the tab takes the whole window: study tools in
@@ -142,14 +143,14 @@
   .ws-trans-name{font-size:12.5px;color:var(--muted);margin:0 0 8px;letter-spacing:.02em}
   .ws-reader{font-size:15.5px;line-height:1.65}
   .ws-reader p{margin:0 0 10px}
-  .ws-vhead{font-family:Georgia,"Times New Roman",serif;font-style:italic;color:var(--green);
+  .ws-vhead{font-family:Georgia,"Times New Roman",serif;font-style:italic;color:var(--accent-text);
     font-size:15px;margin:12px 0 6px}
   .ws-vn{color:var(--gold);font-weight:700;font-size:11px;margin-right:3px}
   .ws-verse.ws-hl{background:var(--soft);border-radius:4px;box-shadow:inset 3px 0 0 var(--gold);
     padding:1px 3px;margin:-1px -3px}
   .ws-credit{font-size:12px;color:var(--muted);margin:12px 0 0;line-height:1.45}
   .ws-xref-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
-  .ws-xref{background:var(--soft);border:1px solid var(--line);color:var(--green);
+  .ws-xref{background:var(--soft);border:1px solid var(--line);color:var(--accent-text);
     border-radius:999px;padding:4px 11px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
   .ws-xref:hover{border-color:var(--gold)}
   .ws-work{margin:0 0 18px}
@@ -162,7 +163,7 @@
     text-transform:uppercase;margin:0 0 3px}
   .ws-comm .ws-text{white-space:pre-wrap;word-wrap:break-word;font-size:14.5px;line-height:1.55}
   .ws-clamp{max-height:9.2em;overflow:hidden}
-  .ws-more{background:none;border:0;color:var(--green);font:inherit;font-size:13.5px;
+  .ws-more{background:none;border:0;color:var(--accent-text);font:inherit;font-size:13.5px;
     font-weight:700;cursor:pointer;padding:4px 0 0}
   .ws-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
   .ws-chip{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:8px;
@@ -177,7 +178,7 @@
   .ws-pos{color:var(--muted);font-size:13px}
   .ws-def{white-space:pre-wrap;word-wrap:break-word;font-size:14px;line-height:1.55;margin-top:4px}
   .ws-occ{margin-top:8px;font-size:14px}
-  .ws-occ button{background:none;border:0;color:var(--green);font:inherit;font-weight:600;
+  .ws-occ button{background:none;border:0;color:var(--accent-text);font:inherit;font-weight:600;
     cursor:pointer;padding:0;text-decoration:underline}
   .lf-count{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
   .lf-count select{width:auto;padding:4px 7px;font-size:13.5px}
@@ -202,7 +203,7 @@
   <!-- ======================= sign in ======================= -->
   <div id="view-signin" class="card center-card hidden">
     <span class="wordmark">your youth</span>
-    <h1 style="margin:14px 0 4px;font-size:24px;color:var(--green)">Sign in</h1>
+    <h1 style="margin:14px 0 4px;font-size:24px;color:var(--accent-text)">Sign in</h1>
     <p class="muted" style="margin:0 0 6px">Leaders, students and parents all sign in here, with the same email and password you use in the Your Youth app.</p>
     <form id="signin-form">
       <label for="si-email">Email address</label>
@@ -231,7 +232,7 @@
   <!-- ======================= set a new password (reset link) ======================= -->
   <div id="view-newpassword" class="card center-card hidden">
     <span class="wordmark">your youth</span>
-    <h1 style="margin:14px 0 4px;font-size:24px;color:var(--green)">Choose a new password</h1>
+    <h1 style="margin:14px 0 4px;font-size:24px;color:var(--accent-text)">Choose a new password</h1>
     <p class="muted" style="margin:0 0 6px">You followed a password reset link. Set a new password for your account, and you will go straight to your desk.</p>
     <form id="newpw-form">
       <label for="np-password">New password</label>
@@ -248,7 +249,7 @@
   <!-- ======================= no group ======================= -->
   <div id="view-nogroup" class="card center-card hidden">
     <span class="wordmark">your youth</span>
-    <h1 style="margin:14px 0 4px;font-size:24px;color:var(--green)">No group yet</h1>
+    <h1 style="margin:14px 0 4px;font-size:24px;color:var(--accent-text)">No group yet</h1>
     <p id="nogroup-text">This account does not belong to a group yet. If your leader gave you a group code, join right here — or open the Your Youth app and join there with the same code.</p>
     <form id="nogroup-join-form">
       <label for="nogroup-code">Group code</label>
@@ -283,7 +284,7 @@
 
     <div id="side-youth-view">
     <div class="card hidden" id="youth-empty">
-      <h2 style="margin:0 0 4px;font-size:21px;color:var(--green)">No youth group yet</h2>
+      <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">No youth group yet</h2>
       <p class="muted" style="margin:0">This account does not belong to a youth group. Youth groups begin in the Your Youth app — when you join one, it will appear on this side of the desk.</p>
     </div>
     <div id="youth-main">
@@ -355,7 +356,7 @@
             <div id="lesson-list"></div>
           </div>
           <div class="card" style="margin:0">
-            <h2 style="margin:0 0 4px;font-size:21px;color:var(--green)" id="editor-heading">Write a lesson</h2>
+            <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)" id="editor-heading">Write a lesson</h2>
             <p class="hint" style="margin:0">The teaching itself, in your words — your group reads it in the Bible tab of the app. A video is only ever a supporting extra, never the lesson itself.</p>
             <form id="lesson-form">
               <label for="lf-title">Lesson title</label>
@@ -431,7 +432,7 @@
       <!-- Questions -->
       <section id="pane-questions" class="hidden">
         <div class="card">
-          <h2 style="margin:0 0 4px;font-size:21px;color:var(--green)">Questions — leaders see who asked</h2>
+          <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Questions — leaders see who asked</h2>
           <p class="hint" style="margin:0">Students see these questions without any name. Only leaders see who asked.</p>
           <p class="hint" style="margin:6px 0 0">A question marked held for review is not shown to the group. You release it, or keep it held, from the Safety queue in the app.</p>
           <p class="msg" id="questions-msg"></p>
@@ -448,7 +449,7 @@
             <div id="event-list"></div>
           </div>
           <div class="card" style="margin:0">
-            <h2 style="margin:0 0 4px;font-size:21px;color:var(--green)">Add an event</h2>
+            <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Add an event</h2>
             <form id="event-form">
               <label for="ef-title">Event title</label>
               <input type="text" id="ef-title" placeholder="e.g. Youth night">
@@ -472,7 +473,7 @@
       <!-- Announcements -->
       <section id="pane-announcements">
         <div class="card">
-          <h2 style="margin:0 0 4px;font-size:21px;color:var(--green)">Post an announcement</h2>
+          <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Post an announcement</h2>
           <form id="ann-form">
             <label for="af-title">Title</label>
             <input type="text" id="af-title">
@@ -503,7 +504,7 @@
         <div id="member-lessons"></div>
         <div id="member-reader" class="card hidden" style="margin-top:6px">
           <button class="backlink" id="reader-back" type="button">Back to lessons</button>
-          <h3 id="reader-title" style="margin:2px 0 2px;font-size:23px;color:var(--green)"></h3>
+          <h3 id="reader-title" style="margin:2px 0 2px;font-size:23px;color:var(--accent-text)"></h3>
           <p class="muted" id="reader-passage" style="margin:0 0 14px"></p>
           <div class="bodytext" id="reader-body"></div>
           <p id="reader-video-wrap" class="hidden" style="margin:16px 0 0"><a id="reader-video" href="#" target="_blank" rel="noopener">Watch the supporting video</a></p>
@@ -512,7 +513,7 @@
             <div class="bodytext" id="reader-closing"></div>
           </div>
           <div style="margin-top:26px;border-top:1px solid var(--line);padding-top:16px">
-            <h3 style="margin:0 0 2px;font-size:18px;color:var(--green)">What stood out to me</h3>
+            <h3 style="margin:0 0 2px;font-size:18px;color:var(--accent-text)">What stood out to me</h3>
             <p class="hint" style="margin:0 0 8px">Only you can see this — not your leaders, not anyone else in the group.</p>
             <textarea id="reader-note" rows="3" placeholder="What stood out to me…"></textarea>
             <div class="btnrow">
@@ -547,7 +548,7 @@
 
       <section class="grid" style="margin-top:26px">
         <div class="card" style="margin:0">
-          <h2 style="margin:0 0 2px;font-size:20px;color:var(--green)">Ask a question</h2>
+          <h2 style="margin:0 0 2px;font-size:20px;color:var(--accent-text)">Ask a question</h2>
           <p class="hint" style="margin:0 0 6px">Your question shows to everyone, but not your name. Leaders can see who asked.</p>
           <form id="ask-form">
             <label for="ask-body">Your question</label>
@@ -559,7 +560,7 @@
           </form>
         </div>
         <div class="card" style="margin:0">
-          <h2 style="margin:0 0 2px;font-size:20px;color:var(--green)">Prayer</h2>
+          <h2 style="margin:0 0 2px;font-size:20px;color:var(--accent-text)">Prayer</h2>
           <p class="hint" style="margin:0 0 6px">Prayer requests go to leaders only — they are never posted to the group.</p>
           <form id="prayer-form">
             <label for="prayer-body">Your prayer request</label>
@@ -612,7 +613,7 @@
       <!-- Church announcements -->
       <section id="cpane-announcements">
         <div class="card" id="cann-form-card">
-          <h2 style="margin:0 0 4px;font-size:21px;color:var(--green)">Post an announcement</h2>
+          <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Post an announcement</h2>
           <form id="cann-form">
             <label for="caf-title">Title</label>
             <input type="text" id="caf-title" maxlength="120" placeholder="e.g. Sunday service time change">
@@ -633,7 +634,7 @@
       <!-- Church calendar -->
       <section id="cpane-events" class="hidden">
         <div class="card" id="cevent-form-card">
-          <h2 style="margin:0 0 4px;font-size:21px;color:var(--green)">Add an event</h2>
+          <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Add an event</h2>
           <form id="cevent-form">
             <label for="cef-title">Event title</label>
             <input type="text" id="cef-title" maxlength="120" placeholder="e.g. Sunday worship">
@@ -864,7 +865,7 @@ function syncFavicon() {
    desk keeps the platform look. The palette is the same one the
    app stores on the group row (groups.brand), so web and app can
    never drift apart. */
-const DESK_BRAND_VARS = ['--cream', '--card', '--ink', '--muted', '--green', '--green-deep', '--gold', '--line', '--soft'];
+const DESK_BRAND_VARS = ['--cream', '--card', '--ink', '--muted', '--green', '--green-deep', '--gold', '--line', '--soft', '--accent-text'];
 function applyDeskBrand() {
   const root = document.documentElement;
   let brand = null;
@@ -891,6 +892,7 @@ function applyDeskBrand() {
   root.style.setProperty('--gold', p.accent);
   root.style.setProperty('--soft', p.deep);
   root.style.setProperty('--line', dark ? 'rgba(255,255,255,0.16)' : 'rgba(23,32,43,0.14)');
+  root.style.setProperty('--accent-text', dark ? p.text : p.deep);
   root.style.setProperty('color-scheme', dark ? 'dark' : 'light');
 }
 
