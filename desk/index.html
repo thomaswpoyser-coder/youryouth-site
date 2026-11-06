@@ -1370,6 +1370,14 @@ client.auth.onAuthStateChange((event, session) => {
 });
 
 function showSignedOut() {
+  if (S.recovery) {
+    /* The set-new-password view wins over every other route until
+       the new password is saved — a stray null-session event (the
+       shared-session token dance with the public site can produce
+       one mid-recovery) must not tear the reset form down. */
+    showView('view-newpassword');
+    return;
+  }
   {
     S.user = null; S.profile = null; S.memberships = []; S.churchMemberships = [];
     S.groupId = null; S.churchGroupId = null; S.side = 'youth';
@@ -4706,9 +4714,32 @@ async function recoverSession() {
   S.bootDone = true;
   if (session && session.user) {
     S.user = session.user;
-    loadAccount();
-  } else if (!S.recovery) {
+    if (S.recovery) {
+      /* A reset link brought us here. The recovery session is a
+         real signed-in session, so without this guard the boot
+         routed straight past the set-new-password form into the
+         desk — the Nov 6, 2026 bug, where both the confirmation
+         and the reset email landed a church leader, signed in, on
+         the no-group card and the password was never changed.
+         S.recovery is set from the URL-hash signal at script load
+         and by the PASSWORD_RECOVERY handler above; the form wins
+         over every other route until the new password is saved
+         (the form's own handler clears the flag and loads the
+         account). Normal arrivals never set it and boot exactly
+         as before. */
+      showView('view-newpassword');
+    } else {
+      loadAccount();
+    }
+  } else {
     showView('view-signin');
+    if (linkError || S.recovery) {
+      /* An email link arrived but no session came with it — the
+         link was expired or already used. Say so on the sign-in
+         form instead of leaving a silent dead end. */
+      linkError = false;
+      setMsg('si-msg', 'That link did not work — it may have expired or already been used. If you were resetting your password, use “Forgot your password?” to get a fresh link.', 'err');
+    }
   }
 })();
 </script>
