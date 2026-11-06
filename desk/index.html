@@ -3309,7 +3309,12 @@ function loadYouthSite() {
   $('ys-show-events').checked = !!site.showEvents;
   $('ys-slug').value = typeof site.slug === 'string' ? site.slug : '';
   $('ys-church-code').value = typeof settings.linkedChurchCode === 'string' ? settings.linkedChurchCode : '';
-  $('ys-view').href = '../site/?c=' + encodeURIComponent(m.group.join_code || '');
+  /* View links are absolute to each product's home domain: this one
+     desk file is served from both doors, and a relative link would
+     resolve against whichever door the leader entered through —
+     landing the youth link on the church site shell (or vice versa),
+     which cannot resolve the other product's code or slug. */
+  $('ys-view').href = 'https://youryouth.org/site/?c=' + encodeURIComponent(m.group.join_code || '');
   setMsg('ys-msg', '');
 }
 $('ys-form').addEventListener('submit', async (e) => {
@@ -3370,7 +3375,7 @@ $('ys-claim').addEventListener('click', async () => {
   const { error } = await client.from('groups').update({ settings }).eq('id', m.group.id);
   if (error) { setMsg('ys-msg', 'Could not claim it: ' + error.message, 'err'); return; }
   m.group.settings = settings;
-  $('ys-view').href = '../site/?s=' + encodeURIComponent(want);
+  $('ys-view').href = 'https://youryouth.org/site/?s=' + encodeURIComponent(want);
   setMsg('ys-msg', 'Claimed: youryouth.org/site/?s=' + want, 'ok');
 });
 
@@ -3425,13 +3430,13 @@ function suggestSlug(name) {
 function updateSiteLinks() {
   const m = churchCurrentMembership();
   if (!m) return;
-  const codeUrl = '/site/?c=' + encodeURIComponent(m.group.join_code || '');
+  const codeUrl = 'https://yourpeople.church/site/?c=' + encodeURIComponent(m.group.join_code || '');
   const link = $('site-view-link');
   const fb = $('site-fallback');
   if (S.siteSlug) {
-    link.href = '/' + S.siteSlug;
+    link.href = 'https://yourpeople.church/' + S.siteSlug;
     link.textContent = 'View your church site — yourpeople.church/' + S.siteSlug;
-    fb.textContent = 'The long address always works too: yourpeople.church' + codeUrl;
+    fb.textContent = 'The long address always works too: ' + codeUrl;
     fb.classList.remove('hidden');
   } else {
     link.href = codeUrl;
@@ -3513,7 +3518,7 @@ async function prepareSitePhoto(file) {
 async function loadSiteSettings() {
   const m = churchCurrentMembership();
   if (!m) return;
-  $('site-view-link').href = '/site/?c=' + encodeURIComponent(m.group.join_code || '');
+  $('site-view-link').href = 'https://yourpeople.church/site/?c=' + encodeURIComponent(m.group.join_code || '');
   const { data, error } = await client.from('groups').select('settings').eq('id', S.churchGroupId).maybeSingle();
   if (error || !data) {
     setMsg('site-msg', 'Your site details could not load just now. Check your connection and try again.', 'err');
