@@ -1338,6 +1338,12 @@ client.auth.onAuthStateChange((event, session) => {
     if (!S.user || S.user.id !== session.user.id) {
       S.user = session.user;
       loadAccount();
+    } else {
+      /* Same account, a session (re)delivered: an assist probe that
+         ran before the token was usable stays undecided by design —
+         settle it now that a real session exists. */
+      if (S.assistOk === null && isLeaderHere()) probeAssist();
+      if (S.cAssistOk === null && churchIsLeaderHere()) probeChurchAssist();
     }
   } else {
     if (event !== 'SIGNED_OUT' && !S.bootDone) {
@@ -1690,6 +1696,13 @@ $('lf-delete').addEventListener('click', async () => {
 async function callAssist(payload) {
   const { data: sess } = await client.auth.getSession();
   const token = sess && sess.session ? sess.session.access_token : '';
+  if (!token) {
+    /* No usable session yet: the assist function answers a leader's
+       own token only, so sending the anon key (or an empty bearer)
+       earns a 401 that reads as "unavailable". Report "no session"
+       instead — callers treat it as "not yet", never as a failure. */
+    return { status: 0, json: null, noSession: true };
+  }
   const resp = await fetch(SUPABASE_URL + '/functions/v1/assist', {
     method: 'POST',
     headers: {
@@ -1707,6 +1720,16 @@ async function probeAssist() {
   if (S.assistOk !== null) { renderAssistState(); return; }
   try {
     const r = await callAssist({ kind: 'ping' });
+    if (r.noSession || r.status === 401) {
+      /* "Not yet", not "unavailable": the session may still be
+         settling, and a 401 proves nothing about the function.
+         Leave the probe undecided — it re-runs when the Sermon
+         pane opens and when an auth event delivers a session.
+         Only a settled-session answer may decide (501 /
+         not-configured, or any other non-401 failure). */
+      renderAssistState();
+      return;
+    }
     S.assistOk = !!(r.json && r.json.ok === true);
   } catch (e) {
     S.assistOk = false;
@@ -1722,7 +1745,10 @@ function renderAssistState() {
     buttons.classList.remove('hidden');
   }
 }
-document.querySelectorAll('[data-assist]').forEach((btn) => {
+/* Scoped to THIS side's box: the merged desk carries a second
+   assist box (the church side's), and a document-wide binding
+   would wire every button to both sides' handlers. */
+$('assist-buttons').querySelectorAll('[data-assist]').forEach((btn) => {
   btn.addEventListener('click', async () => {
     const mode = btn.getAttribute('data-assist');
     const title = $('lf-title').value.trim();
@@ -1738,7 +1764,7 @@ document.querySelectorAll('[data-assist]').forEach((btn) => {
       .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
       .slice(-8)
       .map((l) => ({ title: l.title, passageRef: l.passage_ref || '' }));
-    const all = document.querySelectorAll('[data-assist]');
+    const all = $('assist-buttons').querySelectorAll('[data-assist]');
     all.forEach((b) => { b.disabled = true; });
     setMsg('assist-msg', 'Working on it…');
     try {
@@ -1746,6 +1772,15 @@ document.querySelectorAll('[data-assist]').forEach((btn) => {
       if (r.status === 501 || (r.json && r.json.error === 'not-configured')) {
         S.assistOk = false; renderAssistState();
         setMsg('assist-msg', 'Sermon assist isn’t available right now. Your text is unchanged.');
+        return;
+      }
+      if (r.noSession || r.status === 401) {
+        /* The session was not usable for this call (e.g. it settled
+           late): re-probe rather than declaring the assist
+           unavailable, and let the leader simply try again. */
+        S.assistOk = null;
+        probeAssist();
+        setMsg('assist-msg', 'That didn’t work just now. Your text is unchanged — try again in a moment.', 'err');
         return;
       }
       if (r.json && typeof r.json.text === 'string' && r.json.text.trim()) {
@@ -2039,7 +2074,7 @@ function selectTab(name) {
   // The Lessons tab is a workstation: it alone takes the full
   // width of the window. Every other tab keeps the desk's measure.
   wsSyncWidth();
-  if (name === 'lessons') wsMaybeInit();
+  if (name === 'lessons') { wsMaybeInit(); probeAssist(); }
   if (name === 'youthsite') loadYouthSite();
 }
 $('tab-lessons').addEventListener('click', () => selectTab('lessons'));
@@ -2984,7 +3019,7 @@ function selectChurchTab(name) {
     $('cpane-' + t).classList.toggle('hidden', t !== name);
   }
   if (name === 'site') loadSiteSettings();
-  if (name === 'lessons') { loadChurchSermons(); cwsMaybeInit(); }
+  if (name === 'lessons') { loadChurchSermons(); cwsMaybeInit(); probeChurchAssist(); }
   wsSyncWidth();
 }
 $('ctab-announcements').addEventListener('click', () => selectChurchTab('announcements'));
@@ -3313,8 +3348,21 @@ $('ys-claim').addEventListener('click', async () => {
       { headers: { Authorization: 'Bearer ' + token, apikey: SUPABASE_ANON_KEY } });
     data = await r.json();
   } catch (e) { /* handled below */ }
-  if (!data || data.ok !== true || data.available !== true) {
-    setMsg('ys-msg', (data && data.reason) ? data.reason : 'That address is not available.', 'err'); return;
+  /* The youth-site function's check answers {available:true}
+     (plus own:true when the slug is already this group's) or
+     {available:false, reason:'taken'|'invalid'|'reserved'} — it
+     never sends an "ok" field, so availability alone decides. */
+  if (!data || data.available !== true) {
+    const reason = data && data.reason;
+    setMsg('ys-msg',
+      reason === 'taken'
+        ? 'Another group already uses that address. Try a small change — add your town, or your group’s name.'
+        : reason === 'reserved'
+          ? 'That word belongs to Your Youth itself — try adding your town, or your group’s name.'
+          : reason === 'invalid'
+            ? 'That address doesn’t fit the rules — lowercase letters, numbers and hyphens, 3 to 40 characters.'
+            : 'That address is not available.', 'err');
+    return;
   }
   const settings = { ...((m.group.settings && typeof m.group.settings === 'object') ? m.group.settings : {}) };
   const site = { ...((settings.site && typeof settings.site === 'object') ? settings.site : {}) };
@@ -3928,6 +3976,13 @@ $('clf-delete').addEventListener('click', async () => {
 async function callChurchAssist(payload) {
   const { data: sess } = await client.auth.getSession();
   const token = sess && sess.session ? sess.session.access_token : '';
+  if (!token) {
+    /* No usable session yet: the assist function answers a leader's
+       own token only, so sending the anon key (or an empty bearer)
+       earns a 401 that reads as "unavailable". Report "no session"
+       instead — callers treat it as "not yet", never as a failure. */
+    return { status: 0, json: null, noSession: true };
+  }
   const resp = await fetch(SUPABASE_URL + '/functions/v1/assist', {
     method: 'POST',
     headers: {
@@ -3945,6 +4000,16 @@ async function probeChurchAssist() {
   if (S.cAssistOk !== null) { renderChurchAssistState(); return; }
   try {
     const r = await callChurchAssist({ kind: 'ping' });
+    if (r.noSession || r.status === 401) {
+      /* "Not yet", not "unavailable": the session may still be
+         settling, and a 401 proves nothing about the function.
+         Leave the probe undecided — it re-runs when the Sermon
+         pane opens and when an auth event delivers a session.
+         Only a settled-session answer may decide (501 /
+         not-configured, or any other non-401 failure). */
+      renderChurchAssistState();
+      return;
+    }
     S.cAssistOk = !!(r.json && r.json.ok === true);
   } catch (e) {
     S.cAssistOk = false;
@@ -3960,7 +4025,10 @@ function renderChurchAssistState() {
     buttons.classList.remove('hidden');
   }
 }
-document.querySelectorAll('[data-assist]').forEach((btn) => {
+/* Scoped to THIS side's box: the merged desk carries a second
+   assist box (the youth side's), and a document-wide binding
+   would wire every button to both sides' handlers. */
+$('cassist-buttons').querySelectorAll('[data-assist]').forEach((btn) => {
   btn.addEventListener('click', async () => {
     const mode = btn.getAttribute('data-assist');
     const title = $('clf-title').value.trim();
@@ -3976,7 +4044,7 @@ document.querySelectorAll('[data-assist]').forEach((btn) => {
       .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
       .slice(-8)
       .map((l) => ({ title: l.title, passageRef: l.passage_ref || '' }));
-    const all = document.querySelectorAll('[data-assist]');
+    const all = $('cassist-buttons').querySelectorAll('[data-assist]');
     all.forEach((b) => { b.disabled = true; });
     setMsg('cassist-msg', 'Working on it…');
     try {
@@ -3984,6 +4052,15 @@ document.querySelectorAll('[data-assist]').forEach((btn) => {
       if (r.status === 501 || (r.json && r.json.error === 'not-configured')) {
         S.cAssistOk = false; renderChurchAssistState();
         setMsg('cassist-msg', 'Sermon assist isn’t available right now. Your text is unchanged.');
+        return;
+      }
+      if (r.noSession || r.status === 401) {
+        /* The session was not usable for this call (e.g. it settled
+           late): re-probe rather than declaring the assist
+           unavailable, and let the leader simply try again. */
+        S.cAssistOk = null;
+        probeChurchAssist();
+        setMsg('cassist-msg', 'That didn’t work just now. Your text is unchanged — try again in a moment.', 'err');
         return;
       }
       if (r.json && typeof r.json.text === 'string' && r.json.text.trim()) {
