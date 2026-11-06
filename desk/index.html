@@ -2287,15 +2287,33 @@ function givingProviderFor(raw) {
 function renderGivingCard() {
   const sec = $('member-giving');
   const m = currentMembership();
-  const raw = m && m.group.settings && typeof m.group.settings.tithelyUrl === 'string'
-    ? m.group.settings.tithelyUrl : '';
-  const provider = (m && m.role === 'parent') ? givingProviderFor(raw) : null;
-  if (!provider) { sec.classList.add('hidden'); return; }
-  const link = $('giving-link');
-  link.href = raw.trim();
-  link.textContent = provider === 'tithely'
-    ? 'Give through Tithely'
-    : (provider === 'canadahelps' ? 'Give through CanadaHelps' : 'Give online');
+  if (!m || m.role !== 'parent') { sec.classList.add('hidden'); return; }
+  // Both provider links, like the app (Nov 6, 2026): tithelyUrl may
+  // hold either provider (older builds saved CanadaHelps there);
+  // canadaHelpsUrl is the dedicated second field.
+  const settings = (m.group && m.group.settings) || {};
+  const links = [];
+  const legacy = typeof settings.tithelyUrl === 'string' ? settings.tithelyUrl.trim() : '';
+  const legacyProvider = givingProviderFor(legacy);
+  if (legacy && legacyProvider === 'tithely') links.push({ provider: 'tithely', url: legacy });
+  const dedicated = typeof settings.canadaHelpsUrl === 'string' ? settings.canadaHelpsUrl.trim() : '';
+  if (dedicated && givingProviderFor(dedicated) === 'canadahelps') {
+    links.push({ provider: 'canadahelps', url: dedicated });
+  } else if (legacy && legacyProvider === 'canadahelps') {
+    links.push({ provider: 'canadahelps', url: legacy });
+  }
+  if (links.length === 0) { sec.classList.add('hidden'); return; }
+  const row = sec.querySelector('.btnrow');
+  row.replaceChildren();
+  for (const l of links) {
+    const a = document.createElement('a');
+    a.className = 'btn';
+    a.href = l.url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = l.provider === 'tithely' ? 'Give through Tithely' : 'Give through CanadaHelps';
+    row.appendChild(a);
+  }
   sec.classList.remove('hidden');
 }
 
