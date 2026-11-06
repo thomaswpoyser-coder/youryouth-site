@@ -244,7 +244,15 @@
   <div id="view-nogroup" class="card center-card hidden">
     <span class="wordmark">your youth</span>
     <h1 style="margin:14px 0 4px;font-size:24px;color:var(--green)">No group yet</h1>
-    <p id="nogroup-text">This account is not a leader of a group yet, and does not belong to one either. If you lead a group in the Your Youth app, sign in with that same account. Groups and memberships begin in the app.</p>
+    <p id="nogroup-text">This account does not belong to a group yet. If your leader gave you a group code, join right here — or open the Your Youth app and join there with the same code.</p>
+    <form id="nogroup-join-form">
+      <label for="nogroup-code">Group code</label>
+      <input type="text" id="nogroup-code" autocomplete="off" autocapitalize="characters">
+      <div class="btnrow">
+        <button class="btn" type="submit" id="nogroup-join-button">Join my group</button>
+      </div>
+      <p class="msg" id="nogroup-join-msg"></p>
+    </form>
     <div class="btnrow">
       <button class="btn secondary" id="nogroup-signout" type="button">Sign out</button>
     </div>
@@ -923,6 +931,46 @@ async function signOut() {
 }
 $('signout').addEventListener('click', signOut);
 $('nogroup-signout').addEventListener('click', signOut);
+
+/* Joining a group by code from the no-group card (Nov 6, 2026):
+   the same lookup + membership insert the app uses, so an account
+   that lands here — fresh from an email confirmation, say — is one
+   code away from its group instead of at a dead end. A church code
+   is refused plainly; those groups live at yourpeople.church. */
+$('nogroup-join-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const code = $('nogroup-code').value.trim().toUpperCase();
+  if (!code || !S.user) return;
+  const btn = $('nogroup-join-button');
+  btn.disabled = true;
+  setMsg('nogroup-join-msg', '');
+  try {
+    const found = await client.rpc('find_group_by_code', { p_code: code });
+    const row = (found.data || [])[0] || null;
+    if (!row) {
+      setMsg('nogroup-join-msg', 'That code was not recognised. Check it with your leader and try again.', 'err');
+      return;
+    }
+    if (row.kind === 'church') {
+      setMsg('nogroup-join-msg', 'That code belongs to a church group — those live at yourpeople.church.', 'err');
+      return;
+    }
+    const role = (S.profile && S.profile.role) || 'student';
+    const joined = await client
+      .from('memberships')
+      .insert({ user_id: S.user.id, group_id: row.id, role });
+    if (joined.error && joined.error.code !== '23505') {
+      setMsg('nogroup-join-msg', 'Could not join that group. Ask your leader to check the code.', 'err');
+      return;
+    }
+    setMsg('nogroup-join-msg', 'You have joined ' + row.name + '. Loading your group…', 'ok');
+    loadAccount();
+  } catch (err) {
+    setMsg('nogroup-join-msg', 'Something went wrong joining just now. Try again in a moment.', 'err');
+  } finally {
+    btn.disabled = false;
+  }
+});
 
 /* ---------- password recovery routing ----------
    A reset link lands back on this page carrying its token in the
