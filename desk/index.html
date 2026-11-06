@@ -117,7 +117,10 @@
      rails — and every panel collapses, so nothing is lost on a
      phone, it is just sequential. The tools read from the Free Use
      Bible API (public-domain / CC BY data only); if that service is
-     unreachable the panels say so and the editor carries on alone. */
+     unreachable the panels say so and the editor carries on alone.
+     The already-written lessons/sermons are not in the row at all:
+     they live in their own posted block under the grid, so the
+     writing area stays the dominant force (Thomas, Nov 6, 2026). */
   #pane-lessons{width:min(1480px,96vw);position:relative;left:50%;translate:-50% 0}
   #cpane-lessons{width:min(1480px,96vw);position:relative;left:50%;translate:-50% 0}
   .brandlogo{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;
@@ -132,7 +135,15 @@
   .photogrid img{width:150px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}
   .photogrid figcaption{margin-top:5px;text-align:center}
   input[type=file]{font:inherit;color:var(--ink)}
-  .ws-grid{display:grid;grid-template-columns:300px minmax(0,1fr) 300px;gap:18px;align-items:start}
+  .ws-grid{display:grid;grid-template-columns:320px minmax(560px,1fr) 320px;gap:18px;align-items:start}
+  /* Posted lessons/sermons: their own block BELOW the workstation
+     grid, entries as a card grid rather than a narrow stack — the
+     writing is the dominant force in the row; what is already
+     written lives underneath it, out of its way (Thomas, Nov 6). */
+  .posted-block{margin-top:34px}
+  .posted-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+  .posted-grid .listitem{margin:0}
+  .posted-grid>p{grid-column:1/-1;margin:0}
   .ws-rail{position:sticky;top:14px;max-height:calc(100vh - 28px);overflow-y:auto;
     padding:2px 2px 6px;scrollbar-width:thin}
   .ws-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;
@@ -363,12 +374,7 @@
         </div>
       </aside>
         <div class="ws-centre" id="ws-centre">
-        <div class="grid">
-          <div>
-            <button class="btn" id="lesson-new" type="button" style="margin-bottom:14px">New lesson</button>
-            <p class="msg" id="lessons-msg" style="margin:0 0 10px"></p>
-            <div id="lesson-list"></div>
-          </div>
+          <button class="btn" id="lesson-new" type="button" style="margin-bottom:14px">New lesson</button>
           <div class="card" style="margin:0">
             <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)" id="editor-heading">Write a lesson</h2>
             <p class="hint" style="margin:0">The teaching itself, in your words — your group reads it in the Bible tab of the app. A video is only ever a supporting extra, never the lesson itself.</p>
@@ -415,7 +421,6 @@
               <p class="msg" id="lf-msg"></p>
             </form>
           </div>
-        </div>
         </div><!-- /ws-centre -->
       <!-- right rail: commentaries and the original words -->
       <aside class="ws-rail" id="ws-right" aria-label="Commentaries and word study">
@@ -441,6 +446,14 @@
         </div>
       </aside>
         </div><!-- /ws-grid -->
+        <!-- Posted lessons: everything already written, in its own
+             block under the workstation — the writing keeps the
+             centre; a posted lesson is re-opened from here. -->
+        <div class="posted-block">
+          <h2 class="sectiontitle">Posted lessons</h2>
+          <p class="msg" id="lessons-msg" style="margin:0 0 10px"></p>
+          <div id="lesson-list" class="posted-grid"></div>
+        </div>
       </section>
 
       <!-- Your youth site (leader): what the public page may show.
@@ -815,12 +828,7 @@
         </div>
       </aside>
         <div class="ws-centre" id="cws-centre">
-        <div class="grid">
-          <div>
-            <button class="btn" id="clesson-new" type="button" style="margin-bottom:14px">New lesson</button>
-            <p class="msg" id="clessons-msg" style="margin:0 0 10px"></p>
-            <div id="clesson-list"></div>
-          </div>
+          <button class="btn" id="clesson-new" type="button" style="margin-bottom:14px">New lesson</button>
           <div class="card" style="margin:0">
             <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)" id="ceditor-heading">Write a lesson</h2>
             <p class="hint" style="margin:0">The teaching itself, in your words — your group reads it in the Bible tab of the app. A video is only ever a supporting extra, never the lesson itself.</p>
@@ -867,7 +875,6 @@
               <p class="msg" id="clf-msg"></p>
             </form>
           </div>
-        </div>
         </div><!-- /ws-centre -->
       <!-- right rail: commentaries and the original words -->
       <aside class="ws-rail" id="cws-right" aria-label="Commentaries and word study">
@@ -893,6 +900,14 @@
         </div>
       </aside>
         </div><!-- /ws-grid -->
+        <!-- Posted sermons: everything already written, in its own
+             block under the workstation — the writing keeps the
+             centre; a posted sermon is re-opened from here. -->
+        <div class="posted-block">
+          <h2 class="sectiontitle">Posted sermons</h2>
+          <p class="msg" id="clessons-msg" style="margin:0 0 10px"></p>
+          <div id="clesson-list" class="posted-grid"></div>
+        </div>
       </section>
 
     </div><!-- /side-church-view -->
@@ -1262,8 +1277,9 @@ $('nogroup-signout').addEventListener('click', signOut);
 /* Joining a group by code from the no-group card (Nov 6, 2026):
    the same lookup + membership insert the app uses, so an account
    that lands here — fresh from an email confirmation, say — is one
-   code away from its group instead of at a dead end. A church code
-   is refused plainly; those groups live at yourpeople.church. */
+   code away from its group instead of at a dead end. The merged
+   desk houses both kinds, so a youth code and a church code alike
+   are joined right here. */
 $('nogroup-join-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const code = $('nogroup-code').value.trim().toUpperCase();
