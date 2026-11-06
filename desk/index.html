@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Your Youth — Leader Desk</title>
+<title>Leader Desk</title>
 <link rel="icon" type="image/png" href="/assets/your-youth-logo.png">
 <style>
   :root{
@@ -119,6 +119,19 @@
      Bible API (public-domain / CC BY data only); if that service is
      unreachable the panels say so and the editor carries on alone. */
   #pane-lessons{width:min(1480px,96vw);position:relative;left:50%;translate:-50% 0}
+  #cpane-lessons{width:min(1480px,96vw);position:relative;left:50%;translate:-50% 0}
+  .brandlogo{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;
+    border:1px solid var(--line);background:var(--card)}
+  /* your church site — ministries editor */
+  .minrow{border:1px solid var(--line);border-radius:12px;padding:6px 16px 14px;
+    margin:0 0 12px;background:var(--cream)}
+  .minrow .row-actions{margin-top:12px}
+  /* your church site — photos */
+  .photogrid{display:flex;flex-wrap:wrap;gap:12px;margin:6px 0 4px}
+  .photogrid figure{margin:0;width:150px}
+  .photogrid img{width:150px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}
+  .photogrid figcaption{margin-top:5px;text-align:center}
+  input[type=file]{font:inherit;color:var(--ink)}
   .ws-grid{display:grid;grid-template-columns:300px minmax(0,1fr) 300px;gap:18px;align-items:start}
   .ws-rail{position:sticky;top:14px;max-height:calc(100vh - 28px);overflow-y:auto;
     padding:2px 2px 6px;scrollbar-width:thin}
@@ -267,7 +280,7 @@
   <!-- ======================= the desk / member home ======================= -->
   <div id="view-app" class="hidden">
     <header class="top">
-      <span class="wordmark small">your youth</span>
+      <span class="wordmark small"><img id="brand-logo" class="brandlogo hidden" alt=""><span id="brand-wordmark">your youth</span></span>
       <div class="who">
         <div>Signed in as <strong id="who-name"></strong></div>
         <div><span id="who-email"></span> · <button class="backlink" id="signout" type="button" style="padding:0">Sign out</button></div>
@@ -302,6 +315,7 @@
         <button type="button" id="tab-announcements" class="active">Announcements</button>
         <button type="button" id="tab-questions">Questions</button>
         <button type="button" id="tab-events">Events</button>
+        <button type="button" id="tab-youthsite">Your youth site</button>
         <button type="button" id="tab-lessons" class="sermon">Sermon preparation</button>
       </div>
 
@@ -427,6 +441,40 @@
         </div>
       </aside>
         </div><!-- /ws-grid -->
+      </section>
+
+      <!-- Your youth site (leader): what the public page may show.
+           Opt-in only — identity (name + logo) by default; member names,
+           the directory, chat, questions and prayers are never shown. -->
+      <section id="pane-youthsite" class="hidden">
+        <div class="card">
+          <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Your youth site</h2>
+          <p class="hint" style="margin:0 0 10px">Your group has a public page at youryouth.org/site. By default it shows only your group's name and logo. Turn on anything else only if you want the public to see it.</p>
+          <form id="ys-form">
+            <label for="ys-welcome">Welcome line</label>
+            <input type="text" id="ys-welcome" maxlength="200" placeholder="e.g. Welcome to SoulFire Youth!">
+            <label style="font-weight:400"><input type="checkbox" id="ys-show-welcome" style="width:auto"> Show the welcome line</label>
+            <label for="ys-meeting">When you meet</label>
+            <input type="text" id="ys-meeting" maxlength="160" placeholder="e.g. Fridays 6:30–8:30 PM">
+            <label style="font-weight:400"><input type="checkbox" id="ys-show-meeting" style="width:auto"> Show when you meet</label>
+            <label for="ys-place">Where you meet</label>
+            <input type="text" id="ys-place" maxlength="200" placeholder="e.g. Centreville Baptist Church, 870 Murray Dr">
+            <label style="font-weight:400"><input type="checkbox" id="ys-show-place" style="width:auto"> Show where you meet</label>
+            <label style="font-weight:400"><input type="checkbox" id="ys-show-events" style="width:auto"> Show upcoming events</label>
+            <label for="ys-slug">Your page address (youryouth.org/site/?s=…)</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="text" id="ys-slug" maxlength="40" placeholder="e.g. soulfireyouth" style="flex:1">
+              <button class="btn secondary" type="button" id="ys-claim">Claim</button>
+            </div>
+            <label for="ys-church-code">Linked church join code (shows a link to your church's site)</label>
+            <input type="text" id="ys-church-code" maxlength="24" placeholder="e.g. CENTREVILLEB">
+            <div class="btnrow">
+              <button class="btn" type="submit">Save</button>
+              <a class="btn secondary" id="ys-view" href="#" target="_blank" rel="noopener">View your page</a>
+            </div>
+            <p class="msg" id="ys-msg"></p>
+          </form>
+        </div>
       </section>
 
       <!-- Questions -->
@@ -608,6 +656,8 @@
         <button type="button" id="ctab-announcements" class="active">Announcements</button>
         <button type="button" id="ctab-events">Calendar</button>
         <button type="button" id="ctab-directory">Directory</button>
+        <button type="button" id="ctab-site">Your church site</button>
+        <button type="button" id="ctab-lessons" class="sermon">Sermon preparation</button>
       </div>
 
       <!-- Church announcements -->
@@ -666,6 +716,185 @@
         <p class="msg" id="cdir-msg"></p>
         <div id="cdir-list"></div>
       </section>
+<section id="cpane-site" class="hidden">
+      <div class="card">
+        <h2 class="sectiontitle" style="margin-top:0">Your church site</h2>
+        <p class="hint" style="margin:0 0 10px">Your church already has a public page &mdash; it builds itself from your logo, your colours, your calendar, your announcements and your ministries, with nothing for you to set up. Fill in anything below to make it more your own; every part is optional, and you can change it any time.</p>
+        <p style="margin:0 0 6px"><a id="site-view-link" href="#" target="_blank" rel="noopener">View your church site</a></p>
+        <p class="hint hidden" id="site-fallback" style="margin:0 0 6px"></p>
+        <label for="site-slug">Site address</label>
+        <div class="btnrow" style="margin-top:0">
+          <span class="muted">yourpeople.church/</span>
+          <input type="text" id="site-slug" maxlength="40" placeholder="yourchurch" autocapitalize="none" autocomplete="off" spellcheck="false" style="flex:1;min-width:170px;width:auto">
+          <button class="btn secondary" type="button" id="site-slug-save">Save address</button>
+        </div>
+        <p class="hint">The short address for your church site &mdash; the one to print in the bulletin and say out loud. Lowercase letters, numbers and hyphens, 3&ndash;40 characters. Clearing the field and saving takes the address back off.</p>
+        <p class="msg" id="site-slug-msg"></p>
+        <form id="site-form">
+          <label for="site-welcome">Welcome text</label>
+          <textarea id="site-welcome" rows="3" maxlength="2000" placeholder="A few words for someone finding your church for the first time&hellip;"></textarea>
+          <label for="site-times">Service times</label>
+          <textarea id="site-times" rows="3" maxlength="1000" placeholder="One per line, e.g. Sunday worship &mdash; 10:30 am"></textarea>
+          <label for="site-address">Address</label>
+          <input type="text" id="site-address" maxlength="300" placeholder="e.g. 123 Main Street, Centreville">
+          <label for="site-giving">Giving link (Tithely)</label>
+          <input type="text" id="site-giving" maxlength="500" placeholder="https://&hellip;">
+          <p class="hint">Your church&rsquo;s own giving page. The same link powers the Give button in the app.</p>
+          <label for="site-giving-canadahelps">Giving link (CanadaHelps)</label>
+          <input type="text" id="site-giving-canadahelps" maxlength="500" placeholder="https://&hellip;">
+          <p class="hint">If your church also takes gifts through CanadaHelps, add that page too &mdash; your site and the app show a button for each. Leave it empty if you don&rsquo;t use CanadaHelps.</p>
+          <label for="site-youth-code">Youth group join code</label>
+          <input type="text" id="site-youth-code" maxlength="40" placeholder="e.g. SOULFIREYOUT" autocapitalize="characters" autocomplete="off" spellcheck="false">
+          <p class="hint">Links your public page to your youth group&rsquo;s page &mdash; if your youth group is on Your Youth, type its join code and your church site footer gains a quiet link to it. Leave it empty if you don&rsquo;t have one.</p>
+          <label style="margin-top:22px">Ministries</label>
+          <p class="hint" style="margin-top:0">The groups and gatherings your church runs &mdash; a name, when it meets, and a sentence in your own words. They appear on your church site under Ministries, in the order below.</p>
+          <div id="site-ministries"></div>
+          <div class="btnrow" style="margin-top:10px">
+            <button class="btn secondary" type="button" id="site-ministry-add">Add a ministry</button>
+          </div>
+          <div class="btnrow">
+            <button class="btn" type="submit" id="site-save">Save site details</button>
+          </div>
+          <p class="msg" id="site-msg"></p>
+        </form>
+
+        <label style="margin-top:22px">Church photos</label>
+        <p class="hint" style="margin-top:0">Photos appear on your church site &mdash; the first one becomes the banner across the top.</p>
+        <div class="photogrid" id="site-photos"></div>
+        <p class="msg" id="site-photos-msg"></p>
+        <div id="site-photo-controls">
+          <input type="file" id="site-photo-file" accept="image/*">
+          <div class="btnrow">
+            <button class="btn secondary" type="button" id="site-photo-upload">Add photo</button>
+          </div>
+        </div>
+        <p class="hint hidden" id="site-photo-setup">Photo uploads need a one-time setup that hasn&rsquo;t been done yet, so photos can&rsquo;t be added just now. Everything else on this page still saves. Tell the person who runs Your People &mdash; it&rsquo;s the Step 24 update.</p>
+        <p class="hint hidden" id="site-photo-cap">Your page shows up to 4 photos &mdash; remove one to add another.</p>
+      </div>
+    </section>
+      <section id="cpane-lessons" class="hidden">
+        <div class="ws-grid" id="cws-grid">
+      <!-- left rail: the passage and its cross-references -->
+      <aside class="ws-rail" id="cws-left" aria-label="Bible and cross-references">
+        <div class="ws-panel" id="cws-reader-panel">
+          <button type="button" class="ws-phead" data-cws-toggle="cws-reader-panel"><span class="ws-pt">Bible</span><span class="ws-chev">&#9662;</span></button>
+          <div class="ws-pbody">
+            <form class="ws-refrow" id="cws-ref-form">
+              <input type="text" id="cws-ref" placeholder="e.g. Psalm 23 or John 10:11" aria-label="Passage to look up">
+              <button class="btn secondary" type="submit">Go</button>
+            </form>
+            <div class="ws-tools">
+              <select id="cws-trans" aria-label="Translation">
+                <option value="BSB" selected>Berean Standard Bible</option>
+                <option value="ENGWEBP">World English Bible</option>
+                <option value="eng_kjv">King James Version</option>
+              </select>
+              <label><input type="checkbox" id="cws-parallel"> Parallel</label>
+              <select id="cws-trans2" class="hidden" aria-label="Second translation">
+                <option value="BSB">Berean Standard Bible</option>
+                <option value="ENGWEBP">World English Bible</option>
+                <option value="eng_kjv" selected>King James Version</option>
+              </select>
+            </div>
+            <div id="cws-reader-zone">
+              <p class="hint">The passage from your lesson appears here &mdash; or look one up above. The study tools follow the passage.</p>
+            </div>
+            <div class="ws-navrow">
+              <button class="btn secondary hidden" type="button" id="cws-prev-ch">&larr; <span></span></button>
+              <button class="btn secondary hidden" type="button" id="cws-next-ch"><span></span> &rarr;</button>
+            </div>
+            <p class="ws-credit">Berean Standard Bible &mdash; public domain (berean.bible). World English Bible and King James Version &mdash; public domain. Texts served by the Free Use Bible API (bible.helloao.org).</p>
+          </div>
+        </div>
+        <div class="ws-panel" id="cws-xref-panel">
+          <button type="button" class="ws-phead" data-cws-toggle="cws-xref-panel"><span class="ws-pt">Cross-references</span><span class="ws-chev">&#9662;</span></button>
+          <div class="ws-pbody">
+            <div id="cws-xref-zone"><p class="hint">Passages that speak to this one, in the Treasury of Scripture Knowledge tradition. Tap one to read it.</p></div>
+            <p class="ws-credit">Cross-reference data from OpenBible.info (CC BY 4.0), via the Free Use Bible API.</p>
+          </div>
+        </div>
+      </aside>
+        <div class="ws-centre" id="cws-centre">
+        <div class="grid">
+          <div>
+            <button class="btn" id="clesson-new" type="button" style="margin-bottom:14px">New lesson</button>
+            <p class="msg" id="clessons-msg" style="margin:0 0 10px"></p>
+            <div id="clesson-list"></div>
+          </div>
+          <div class="card" style="margin:0">
+            <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)" id="ceditor-heading">Write a lesson</h2>
+            <p class="hint" style="margin:0">The teaching itself, in your words — your group reads it in the Bible tab of the app. A video is only ever a supporting extra, never the lesson itself.</p>
+            <form id="clesson-form">
+              <label for="lf-title">Lesson title</label>
+              <input type="text" id="clf-title" placeholder="e.g. Follow Me">
+              <label for="lf-passage">Passage</label>
+              <input type="text" id="clf-passage" placeholder="e.g. Matthew 4:18–22">
+              <label for="lf-body">Lesson</label>
+              <textarea class="lesson-body" id="clf-body" placeholder="Write the lesson…"></textarea>
+
+              <div class="lf-count">
+                <span class="hint" id="clf-words">0 words &middot; &asymp; 0 min at 130 wpm</span>
+                <select id="clf-wpm" aria-label="Reading pace, words per minute">
+                  <option value="120">120</option>
+                  <option value="130" selected>130</option>
+                  <option value="140">140</option>
+                  <option value="150">150</option>
+                </select>
+                <span class="hint">words a minute, read aloud</span>
+              </div>
+
+              <div class="assistbox" id="cassist-box">
+                <p class="ah">Sermon assist</p>
+                <div class="btnrow" style="margin-top:0" id="cassist-buttons">
+                  <button class="btn secondary" type="button" data-assist="draft">Draft from my notes</button>
+                  <button class="btn secondary" type="button" data-assist="outline">Outline from this passage</button>
+                  <button class="btn secondary" type="button" data-assist="questions">Discussion questions</button>
+                  <button class="btn secondary" type="button" data-assist="tighten">Tighten this up</button>
+                </div>
+                <p class="msg" id="cassist-msg" style="margin-bottom:0"></p>
+              </div>
+
+              <label for="lf-closing">Closing line (optional)</label>
+              <input type="text" id="clf-closing" placeholder="e.g. This week, talk to God about…">
+              <p class="hint">One line to carry into the week — it appears at the end of the lesson.</p>
+              <label for="lf-video">Supporting video link (YouTube, optional)</label>
+              <input type="text" id="clf-video" placeholder="https://…">
+              <div class="btnrow">
+                <button class="btn" type="submit" id="clf-publish">Post lesson</button>
+                <button class="btn secondary" type="button" id="clf-draft">Save draft</button>
+                <button class="btn danger hidden" type="button" id="clf-delete">Delete</button>
+              </div>
+              <p class="msg" id="clf-msg"></p>
+            </form>
+          </div>
+        </div>
+        </div><!-- /ws-centre -->
+      <!-- right rail: commentaries and the original words -->
+      <aside class="ws-rail" id="cws-right" aria-label="Commentaries and word study">
+        <div class="ws-panel" id="cws-comm-panel">
+          <button type="button" class="ws-phead" data-cws-toggle="cws-comm-panel"><span class="ws-pt">Commentaries</span><span class="ws-chev">&#9662;</span></button>
+          <div class="ws-pbody">
+            <div id="cws-comm-zone"><p class="hint">Two trusted voices on the passage, each labelled with its era &mdash; servants for your study, never masters of it.</p></div>
+            <p class="ws-credit">Commentary texts are public domain, served by the Free Use Bible API (bible.helloao.org).</p>
+          </div>
+        </div>
+        <div class="ws-panel" id="cws-word-panel">
+          <button type="button" class="ws-phead" data-cws-toggle="cws-word-panel"><span class="ws-pt">Word study</span><span class="ws-chev">&#9662;</span></button>
+          <div class="ws-pbody">
+            <form class="ws-refrow" id="cws-word-form">
+              <input type="text" id="cws-word" placeholder="A word, or Strong&rsquo;s no. (G25)" aria-label="Word or Strong's number to look up">
+              <button class="btn secondary" type="submit">Look up</button>
+            </form>
+            <p class="hint">Type a word from the passage, a Greek or Hebrew word, or a Strong&rsquo;s number like G25 or H430.</p>
+            <div id="cws-chips-zone"></div>
+            <div id="cws-word-zone"></div>
+            <p class="ws-credit">Brief lexicons from STEPBible, Tyndale House, Cambridge (CC BY 4.0). Original-language text from the Berean Interlinear (public domain). Via the Free Use Bible API.</p>
+          </div>
+        </div>
+      </aside>
+        </div><!-- /ws-grid -->
+      </section>
+
     </div><!-- /side-church-view -->
 
     <footer class="foot">Your Youth — what you post here appears in the app right away.</footer>
@@ -684,7 +913,18 @@
    ===================================================================== */
 const SUPABASE_URL = 'https://wsmqkhljjhaueahqizfr.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_4eoGwVeVNyN7jn-wmJsUkg_nShqdukt';
-const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: {
+  persistSession: true, autoRefreshToken: true, detectSessionInUrl: true,
+  storage: window.localStorage } });
+
+/* ---------- one desk, two doors ----------
+   This same file is served at yourpeople.church/desk (the family's
+   main address) and at youryouth.org/desk. The door only changes the
+   platform flavour — wordmark, sign-in copy, platform tab icon; the
+   desk itself, the session and the data are identical. */
+const IS_PEOPLE_DOOR = /(^|\.)yourpeople\.church$/.test(window.location.hostname);
+const DOOR_APP = IS_PEOPLE_DOOR ? 'Your People' : 'Your Youth';
+const DOOR_WORDMARK = IS_PEOPLE_DOOR ? 'your people' : 'your youth';
 
 /* ---------- tiny DOM helpers (all user content goes through
    textContent — nothing user-written is ever parsed as HTML) ------ */
@@ -799,6 +1039,9 @@ const S = {
   groupId: null,
   churchGroupId: null,
   lessons: [], questions: [], events: [], announcements: [], myPrayers: [],
+  cLessons: [], cEditingId: null, cAssistOk: null,
+  settings: null, siteMinistries: [], sitePhotos: [], siteSlug: '', siteBucketOk: null,
+  bootDone: false, recovering: false,
   churchAnnouncements: [], churchEvents: [], directory: [],
   editingId: null,           // lesson open in the editor (null = new)
   editingChurchAnnId: null, editingChurchEventId: null,
@@ -833,7 +1076,7 @@ function showView(id) {
    — the youth group's logo on the Youth side, the church group's
    on the Church side. A group with no logo keeps the platform
    mark, and signing out returns the tab to it. */
-const PLATFORM_FAVICON = '/assets/your-youth-logo.png';
+const PLATFORM_FAVICON = IS_PEOPLE_DOOR ? '/assets/your-people-icon.svg' : '/assets/your-youth-logo.png';
 function setFavicon(href) {
   let link = document.querySelector('link[rel="icon"]');
   if (!link) {
@@ -841,8 +1084,10 @@ function setFavicon(href) {
     link.rel = 'icon';
     document.head.appendChild(link);
   }
-  link.type = 'image/png';
   link.href = href || PLATFORM_FAVICON;
+  const ext = ((link.href.split('?')[0].match(/\.([a-z0-9]+)$/i) || [])[1] || '').toLowerCase();
+  const types = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', svg: 'image/svg+xml', webp: 'image/webp', ico: 'image/x-icon' };
+  if (types[ext]) link.type = types[ext]; else link.removeAttribute('type');
 }
 function syncFavicon() {
   let url = null;
@@ -896,6 +1141,37 @@ function applyDeskBrand() {
   root.style.setProperty('color-scheme', dark ? 'dark' : 'light');
 }
 
+/* ---------- header logo + door flavour ---------- */
+function renderHeaderLogo() {
+  const img = $('brand-logo');
+  if (!img) return;
+  const m = S.side === 'church' ? churchCurrentMembershipSafe() : currentMembership();
+  const url = m && m.group && m.group.logo_url;
+  if (url) { img.src = url; img.classList.remove('hidden'); }
+  else { img.classList.add('hidden'); img.removeAttribute('src'); }
+}
+function churchCurrentMembershipSafe() {
+  return S.churchMemberships.find((m) => m.group.id === S.churchGroupId) || null;
+}
+function applyDoor() {
+  document.title = DOOR_APP + ' — Leader Desk';
+  document.querySelectorAll('.wordmark').forEach((el) => {
+    if (!el.querySelector('img')) el.textContent = DOOR_WORDMARK;
+  });
+  const wm = $('brand-wordmark');
+  if (wm) wm.textContent = DOOR_WORDMARK;
+  if (IS_PEOPLE_DOOR) {
+    const p = document.querySelector('#view-signin p.muted');
+    if (p) p.textContent = 'Church leaders and members sign in here, with the same email and password you use in the Your People app.';
+    const note = document.querySelector('#view-signin .signin-note');
+    if (note) note.textContent = 'New to Your People? Churches begin in the app — this desk is for people who already lead or belong to a church.';
+    const ng = $('nogroup-text');
+    if (ng) ng.textContent = 'This account does not belong to a group yet. If your leader gave you a group code, join right here — or open the Your People app and join there with the same code.';
+    const foot = document.querySelector('.foot');
+    if (foot) foot.textContent = 'Your People — what you post here appears in the app right away.';
+  }
+}
+
 /* ---------- auth ---------- */
 $('signin-form').addEventListener('submit', async (ev) => {
   ev.preventDefault();
@@ -941,7 +1217,7 @@ $('reset-form').addEventListener('submit', async (ev) => {
   btn.disabled = true;
   setMsg('reset-msg', '');
   const { error } = await client.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://youryouth.org/desk/',
+    redirectTo: window.location.href.split('#')[0].split('?')[0],
   });
   btn.disabled = false;
   if (error) {
@@ -978,6 +1254,7 @@ async function signOut() {
   S.memberships = [];
   S.churchMemberships = [];
   applyDeskBrand();
+  renderHeaderLogo();
 }
 $('signout').addEventListener('click', signOut);
 $('nogroup-signout').addEventListener('click', signOut);
@@ -999,10 +1276,6 @@ $('nogroup-join-form').addEventListener('submit', async (e) => {
     const row = (found.data || [])[0] || null;
     if (!row) {
       setMsg('nogroup-join-msg', 'That code was not recognised. Check it with your leader and try again.', 'err');
-      return;
-    }
-    if (row.kind === 'church') {
-      setMsg('nogroup-join-msg', 'That code belongs to a church group — those live at yourpeople.church.', 'err');
       return;
     }
     const role = (S.profile && S.profile.role) || 'student';
@@ -1051,6 +1324,31 @@ client.auth.onAuthStateChange((event, session) => {
       loadAccount();
     }
   } else {
+    if (event !== 'SIGNED_OUT' && !S.bootDone) {
+      /* Boot is still acquiring the session (three-step, below);
+         a null here is a first read, not a sign-out. */
+      return;
+    }
+    if (event !== 'SIGNED_OUT' && S.user && !S.recovering) {
+      /* A null session on any other event is not proof of sign-out:
+         another page on this domain refreshing the shared session
+         can rotate the token under us. Try to recover the stored
+         session once before believing we are signed out. */
+      S.recovering = true;
+      recoverSession().then((ok) => {
+        S.recovering = false;
+        if (!ok) showSignedOut();
+      });
+      return;
+    }
+    if (event !== 'SIGNED_OUT' && S.user) return; /* recovery already running */
+    showSignedOut();
+    return;
+  }
+});
+
+function showSignedOut() {
+  {
     S.user = null; S.profile = null; S.memberships = []; S.churchMemberships = [];
     S.groupId = null; S.churchGroupId = null; S.side = 'youth';
     setFavicon(PLATFORM_FAVICON);
@@ -1060,8 +1358,9 @@ client.auth.onAuthStateChange((event, session) => {
       linkError = false;
       setMsg('si-msg', 'That link did not work — it may have expired or already been used. If you were resetting your password, use “Forgot your password?” to get a fresh link.', 'err');
     }
+    renderHeaderLogo();
   }
-});
+}
 
 /* ---------- account + groups ---------- */
 async function loadAccount() {
@@ -1079,7 +1378,7 @@ async function loadAccount() {
   if (mem.error || rows.length === 0) {
     if (mem.error) {
       $('nogroup-text').textContent =
-        'We could not load your groups just now (' + mem.error.message + '). Try signing out and back in; if it keeps happening, tell the person who runs Your Youth.';
+        'We could not load your groups just now (' + mem.error.message + '). Try signing out and back in; if it keeps happening, tell the person who runs ' + DOOR_APP + '.';
     }
     showView('view-nogroup');
     return;
@@ -1154,7 +1453,7 @@ async function loadAccount() {
   // the Church side (remembered on this device only).
   const hasChurch = S.churchMemberships.length > 0;
   const hasYouth = S.memberships.length > 0;
-  $('side-toggle').classList.toggle('hidden', !hasChurch);
+  $('side-toggle').classList.toggle('hidden', !(hasChurch && hasYouth));
   let savedSide = null;
   try { savedSide = window.localStorage.getItem('youryouth-desk-side'); } catch (e) { /* storage unavailable */ }
   if (hasChurch && !hasYouth) S.side = 'church';
@@ -1203,6 +1502,7 @@ function setSide(side, remember) {
   }
   syncFavicon();
   applyDeskBrand();
+  renderHeaderLogo();
   wsSyncWidth();
 }
 $('side-youth').addEventListener('click', () => setSide('youth'));
@@ -1213,6 +1513,7 @@ function applyGroup() {
   if (!m) return;
   syncFavicon();
   applyDeskBrand();
+  renderHeaderLogo();
   $('group-code').textContent = m.group.join_code || '';
   $('group-role').textContent = m.role === 'leader' ? 'Leader' : (m.role === 'parent' ? 'Parent' : 'Member');
   const pending = pendingApproval();
@@ -1715,7 +2016,7 @@ $('ann-form').addEventListener('submit', async (ev) => {
 
 /* ---------- desk tabs ---------- */
 function selectTab(name) {
-  for (const t of ['lessons', 'questions', 'events', 'announcements']) {
+  for (const t of ['lessons', 'questions', 'events', 'announcements', 'youthsite']) {
     $('tab-' + t).classList.toggle('active', t === name);
     $('pane-' + t).classList.toggle('hidden', t !== name);
   }
@@ -1723,11 +2024,13 @@ function selectTab(name) {
   // width of the window. Every other tab keeps the desk's measure.
   wsSyncWidth();
   if (name === 'lessons') wsMaybeInit();
+  if (name === 'youthsite') loadYouthSite();
 }
 $('tab-lessons').addEventListener('click', () => selectTab('lessons'));
 $('tab-questions').addEventListener('click', () => selectTab('questions'));
 $('tab-events').addEventListener('click', () => selectTab('events'));
 $('tab-announcements').addEventListener('click', () => selectTab('announcements'));
+$('tab-youthsite').addEventListener('click', () => selectTab('youthsite'));
 
 /* ---------- workstation width ----------
    The Lessons tab is a workstation: while a leader is on it,
@@ -1735,10 +2038,12 @@ $('tab-announcements').addEventListener('click', () => selectTab('announcements'
    tab, the member home and the Church side keep the desk's
    measure. */
 function wsSyncWidth() {
-  const on = S.side === 'youth' &&
+  const youthOn = S.side === 'youth' &&
     !$('desk').classList.contains('hidden') &&
     $('tab-lessons').classList.contains('active');
-  document.querySelector('.wrap').classList.toggle('wide', !!on);
+  const churchOn = S.side === 'church' &&
+    $('ctab-lessons') && $('ctab-lessons').classList.contains('active');
+  document.querySelector('.wrap').classList.toggle('wide', !!(youthOn || churchOn));
 }
 
 /* ================= LESSON WORKSTATION =================
@@ -2639,6 +2944,10 @@ function applyChurchGroup() {
   if (!m) return;
   syncFavicon();
   applyDeskBrand();
+  renderHeaderLogo();
+  $('ctab-site').classList.toggle('hidden', !churchIsLeaderHere());
+  $('ctab-lessons').classList.toggle('hidden', !churchIsLeaderHere());
+  if (churchIsLeaderHere()) { resetChurchEditor(); loadChurchSermons(); probeChurchAssist(); }
   $('cgroup-code').textContent = m.group.join_code || '';
   let role = roleLabel(m.role);
   if (m.group.created_by && S.user && m.group.created_by === S.user.id) role += ' · you set this church up';
@@ -2653,14 +2962,20 @@ function applyChurchGroup() {
 
 /* ---------- church desk tabs ---------- */
 function selectChurchTab(name) {
-  for (const t of ['announcements', 'events', 'directory']) {
+  if ((name === 'site' || name === 'lessons') && !churchIsLeaderHere()) name = 'announcements';
+  for (const t of ['announcements', 'events', 'directory', 'site', 'lessons']) {
     $('ctab-' + t).classList.toggle('active', t === name);
     $('cpane-' + t).classList.toggle('hidden', t !== name);
   }
+  if (name === 'site') loadSiteSettings();
+  if (name === 'lessons') { loadChurchSermons(); cwsMaybeInit(); }
+  wsSyncWidth();
 }
 $('ctab-announcements').addEventListener('click', () => selectChurchTab('announcements'));
 $('ctab-events').addEventListener('click', () => selectChurchTab('events'));
 $('ctab-directory').addEventListener('click', () => selectChurchTab('directory'));
+$('ctab-site').addEventListener('click', () => selectChurchTab('site'));
+$('ctab-lessons').addEventListener('click', () => selectChurchTab('lessons'));
 
 /* ---------- church announcements ---------- */
 async function fetchChurchAnnouncements() {
@@ -2927,13 +3242,1369 @@ async function loadChurchDirectory() {
   renderChurchDirectory();
 }
 
-/* ---------- first route ---------- */
-(async () => {
-  const { data } = await client.auth.getSession();
-  if (data.session && data.session.user) {
-    S.user = data.session.user;
-    loadAccount();
+
+/* ================= YOUR YOUTH SITE (leader) ================= */
+function loadYouthSite() {
+  const m = currentMembership();
+  if (!m) return;
+  const settings = (m.group.settings && typeof m.group.settings === 'object') ? m.group.settings : {};
+  const site = (settings.site && typeof settings.site === 'object') ? settings.site : {};
+  $('ys-welcome').value = typeof site.welcome === 'string' ? site.welcome : '';
+  $('ys-meeting').value = typeof site.serviceTimes === 'string' ? site.serviceTimes : '';
+  $('ys-place').value = typeof site.address === 'string' ? site.address : '';
+  $('ys-show-welcome').checked = !!site.showWelcome;
+  $('ys-show-meeting').checked = !!site.showMeetingTime;
+  $('ys-show-place').checked = !!site.showPlace;
+  $('ys-show-events').checked = !!site.showEvents;
+  $('ys-slug').value = typeof site.slug === 'string' ? site.slug : '';
+  $('ys-church-code').value = typeof settings.linkedChurchCode === 'string' ? settings.linkedChurchCode : '';
+  $('ys-view').href = '../site/?c=' + encodeURIComponent(m.group.join_code || '');
+  setMsg('ys-msg', '');
+}
+$('ys-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const m = currentMembership();
+  if (!m) return;
+  const settings = { ...((m.group.settings && typeof m.group.settings === 'object') ? m.group.settings : {}) };
+  const site = { ...((settings.site && typeof settings.site === 'object') ? settings.site : {}) };
+  site.welcome = $('ys-welcome').value.trim() || undefined;
+  site.serviceTimes = $('ys-meeting').value.trim() || undefined;
+  site.address = $('ys-place').value.trim() || undefined;
+  site.showWelcome = $('ys-show-welcome').checked;
+  site.showMeetingTime = $('ys-show-meeting').checked;
+  site.showPlace = $('ys-show-place').checked;
+  site.showEvents = $('ys-show-events').checked;
+  const code = $('ys-church-code').value.trim().toUpperCase();
+  settings.linkedChurchCode = code || undefined;
+  settings.site = site;
+  setMsg('ys-msg', 'Saving…');
+  const { error } = await client.from('groups').update({ settings }).eq('id', m.group.id);
+  if (error) { setMsg('ys-msg', 'Could not save: ' + error.message, 'err'); return; }
+  m.group.settings = settings;
+  setMsg('ys-msg', 'Saved. Your public page updates right away.', 'ok');
+});
+$('ys-claim').addEventListener('click', async () => {
+  const m = currentMembership();
+  if (!m) return;
+  const want = ($('ys-slug').value || '').trim().toLowerCase();
+  if (!/^[a-z0-9][a-z0-9-]{2,39}$/.test(want)) { setMsg('ys-msg', 'Use 3–40 characters: small letters, numbers and dashes.', 'err'); return; }
+  setMsg('ys-msg', 'Checking “' + want + '”…');
+  const { data: sess } = await client.auth.getSession();
+  const token = sess && sess.session ? sess.session.access_token : '';
+  let data = null;
+  try {
+    const r = await fetch(SUPABASE_URL + '/functions/v1/youth-site?check=' + encodeURIComponent(want) + '&for=' + encodeURIComponent(m.group.id),
+      { headers: { Authorization: 'Bearer ' + token, apikey: SUPABASE_ANON_KEY } });
+    data = await r.json();
+  } catch (e) { /* handled below */ }
+  if (!data || data.ok !== true || data.available !== true) {
+    setMsg('ys-msg', (data && data.reason) ? data.reason : 'That address is not available.', 'err'); return;
+  }
+  const settings = { ...((m.group.settings && typeof m.group.settings === 'object') ? m.group.settings : {}) };
+  const site = { ...((settings.site && typeof settings.site === 'object') ? settings.site : {}) };
+  site.slug = want; settings.site = site;
+  const { error } = await client.from('groups').update({ settings }).eq('id', m.group.id);
+  if (error) { setMsg('ys-msg', 'Could not claim it: ' + error.message, 'err'); return; }
+  m.group.settings = settings;
+  $('ys-view').href = '../site/?s=' + encodeURIComponent(want);
+  setMsg('ys-msg', 'Claimed: youryouth.org/site/?s=' + want, 'ok');
+});
+
+/* ================= YOUR CHURCH SITE ================= */
+/* ================= YOUR CHURCH SITE =================
+   The public page builds itself from the group (name, logo,
+   brand, events, announcements) — this tab only writes the
+   leader's own touches into groups.settings, through the same
+   read-merge-write of the whole settings object the app's
+   saveSettings uses, under the same "leaders update their group"
+   database rule. Site choices live at settings.site; the giving
+   link is settings.tithelyUrl itself — the one link the app's
+   Give button and the public page both read. ------------------ */
+/* ---------- site addresses ----------
+   The church's chosen short address (yourpeople.church/<slug>)
+   lives at settings.site.slug. The shape rules here mirror the
+   church-site function's own copy — keep the two in step. The
+   function has the final word on availability (its ?check mode);
+   this side validates the shape first, so the leader hears about
+   a problem before anything is saved, and a taken or refused
+   address is always a clear message, never a silent no-op. --- */
+const SLUG_RESERVED = [
+  'desk', 'site', 'app', 'api', 'www', 'mail', 'help', 'support',
+  'admin', 'yourpeople', 'youryouth', 'login', 'join', 'c',
+  'about', 'account', 'assets', 'blog', 'church', 'churches',
+  'contact', 'cname', 'dashboard', 'find', 'groups', 'home',
+  'index', 'new', 'news', 'pricing', 'privacy', 'robots',
+  'search', 'settings', 'signin', 'signup', 'sitemap', 'static',
+  'terms', 'your-people', 'your-youth', '404',
+];
+function slugProblemText(slug) {
+  if (slug.length < 3) return 'That’s a bit short — addresses run 3 to 40 characters.';
+  if (slug.length > 40) return 'That’s too long — addresses run 3 to 40 characters.';
+  if (/[^a-z0-9-]/.test(slug)) return 'Letters, numbers and hyphens only — no spaces or symbols.';
+  if (slug.startsWith('-') || slug.endsWith('-')) return 'The address can’t start or end with a hyphen.';
+  if (SLUG_RESERVED.includes(slug)) return 'That word belongs to Your People itself — try adding your town, or the word church.';
+  return null;
+}
+function suggestSlug(name) {
+  // The domain already says "church", so the suggestion drops the
+  // generic words and keeps the name's own: Centreville Baptist
+  // Church suggests centrevillebaptist.
+  const words = (name || '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  const drop = new Set(['church', 'the', 'of']);
+  const kept = words.filter((w) => !drop.has(w));
+  const joined = (kept.length ? kept : words).join('');
+  return joined.length >= 3 ? joined.slice(0, 40) : '';
+}
+/* The View link wears the pretty address once one is saved, and
+   the ?c= link stays visible underneath as the permanent
+   fallback — it works whether or not an address is chosen. */
+function updateSiteLinks() {
+  const m = churchCurrentMembership();
+  if (!m) return;
+  const codeUrl = '/site/?c=' + encodeURIComponent(m.group.join_code || '');
+  const link = $('site-view-link');
+  const fb = $('site-fallback');
+  if (S.siteSlug) {
+    link.href = '/' + S.siteSlug;
+    link.textContent = 'View your church site — yourpeople.church/' + S.siteSlug;
+    fb.textContent = 'The long address always works too: yourpeople.church' + codeUrl;
+    fb.classList.remove('hidden');
   } else {
+    link.href = codeUrl;
+    link.textContent = 'View your church site';
+    fb.textContent = '';
+    fb.classList.add('hidden');
+  }
+}
+function sitePhotoUrl(path) {
+  try {
+    const { data } = client.storage.from('church-site-photos').getPublicUrl(path);
+    return data && data.publicUrl ? data.publicUrl : null;
+  } catch (_e) { return null; }
+}
+/* ---------- site photo bounds ----------
+   The public page carries at most SITE_PHOTO_MAX photos, and
+   uploads are shrunk here, before they travel: longest side at
+   most SITE_PHOTO_MAX_EDGE px, re-encoded as JPEG (white behind
+   any transparency) — the same client-side downscale the app
+   does for logos. The public page's own editor holds the same
+   two bounds. A photo already JPEG and inside the bounds is
+   uploaded untouched, and one that cannot be decoded is
+   uploaded as-is rather than refused: the resize is a courtesy,
+   never a gate. Every write of the list is trimmed to the cap,
+   so even a stale client cannot save a longer list. ---------- */
+const SITE_PHOTO_MAX = 4;
+const SITE_PHOTO_MAX_EDGE = 1024;
+const SITE_PHOTO_CAP_MSG = 'Your page shows up to ' + SITE_PHOTO_MAX + ' photos — remove one to add another.';
+function photoTargetSize(width, height) {
+  const longest = Math.max(width || 0, height || 0);
+  if (!longest || longest <= SITE_PHOTO_MAX_EDGE) return null;
+  const k = SITE_PHOTO_MAX_EDGE / longest;
+  return {
+    width: Math.max(1, Math.round((width || 0) * k)),
+    height: Math.max(1, Math.round((height || 0) * k)),
+  };
+}
+async function decodeSitePhoto(file) {
+  if (typeof createImageBitmap === 'function') {
+    try { return await createImageBitmap(file); } catch (_e) { /* fall through to the Image path */ }
+  }
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('photo decode failed')); };
+    img.src = url;
+  });
+}
+async function prepareSitePhoto(file) {
+  const original = { blob: file, name: file && file.name ? file.name : 'photo', resized: false };
+  let bmp = null;
+  try { bmp = await decodeSitePhoto(file); } catch (_e) { return original; }
+  const w = bmp.naturalWidth || bmp.width || 0;
+  const hgt = bmp.naturalHeight || bmp.height || 0;
+  const target = photoTargetSize(w, hgt);
+  const isJpeg = ((file && file.type) || '').toLowerCase() === 'image/jpeg';
+  if (!target && isJpeg) {
+    if (bmp.close) bmp.close();
+    return original;
+  }
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = target ? target.width : w;
+    canvas.height = target ? target.height : hgt;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    if (bmp.close) bmp.close();
+    if (!blob) return original;
+    const base = (file.name || 'photo').replace(/\.[^.]*$/, '');
+    return { blob, name: base + '.jpg', resized: true };
+  } catch (_e) {
+    return original;
+  }
+}
+async function loadSiteSettings() {
+  const m = churchCurrentMembership();
+  if (!m) return;
+  $('site-view-link').href = '/site/?c=' + encodeURIComponent(m.group.join_code || '');
+  const { data, error } = await client.from('groups').select('settings').eq('id', S.churchGroupId).maybeSingle();
+  if (error || !data) {
+    setMsg('site-msg', 'Your site details could not load just now. Check your connection and try again.', 'err');
+    return;
+  }
+  S.settings = data.settings && typeof data.settings === 'object' ? data.settings : {};
+  const site = S.settings.site && typeof S.settings.site === 'object' ? S.settings.site : {};
+  S.siteSlug = typeof site.slug === 'string' ? site.slug : '';
+  $('site-slug').value = S.siteSlug || suggestSlug(m.group.name);
+  setMsg('site-slug-msg', '');
+  updateSiteLinks();
+  $('site-welcome').value = typeof site.welcome === 'string' ? site.welcome : '';
+  $('site-times').value = typeof site.serviceTimes === 'string' ? site.serviceTimes : '';
+  $('site-address').value = typeof site.address === 'string' ? site.address : '';
+  $('site-giving').value = typeof S.settings.tithelyUrl === 'string' ? S.settings.tithelyUrl : '';
+  $('site-giving-canadahelps').value = typeof S.settings.canadaHelpsUrl === 'string' ? S.settings.canadaHelpsUrl : '';
+  $('site-youth-code').value = typeof site.linkedYouthCode === 'string' ? site.linkedYouthCode : '';
+  S.siteMinistries = (Array.isArray(site.ministries) ? site.ministries : [])
+    .filter((m) => m && typeof m === 'object')
+    .map((m) => ({
+      name: typeof m.name === 'string' ? m.name : '',
+      when: typeof m.when === 'string' ? m.when : '',
+      place: typeof m.place === 'string' ? m.place : '',
+      blurb: typeof m.blurb === 'string' ? m.blurb : '',
+    }));
+  S.sitePhotos = Array.isArray(site.photos) ? site.photos.filter((p) => typeof p === 'string') : [];
+  setMsg('site-msg', '');
+  renderSiteMinistries();
+  renderSitePhotos();
+  probeSiteBucket();
+}
+async function saveSiteSettings(successText) {
+  if (!S.settings) return false;
+  const site = S.settings.site && typeof S.settings.site === 'object' ? { ...S.settings.site } : {};
+  site.welcome = $('site-welcome').value.trim();
+  site.serviceTimes = $('site-times').value.trim();
+  site.address = $('site-address').value.trim();
+  site.linkedYouthCode = $('site-youth-code').value.trim().toUpperCase();
+  site.ministries = siteMinistriesClean(S.siteMinistries);
+  site.photos = [...S.sitePhotos].slice(0, SITE_PHOTO_MAX);
+  const next = { ...S.settings, site, tithelyUrl: $('site-giving').value.trim(), canadaHelpsUrl: $('site-giving-canadahelps').value.trim() };
+  const { error } = await client.from('groups').update({ settings: next }).eq('id', S.churchGroupId);
+  if (error) {
+    setMsg('site-msg', 'Those details did not save. Check your connection and try again.', 'err');
+    return false;
+  }
+  S.settings = next;
+  S.sitePhotos = [...site.photos];
+  setMsg('site-msg', successText || 'Saved — your church site shows it now.', 'ok');
+  return true;
+}
+/* ---------- site ministries ----------
+   The church's listed ministries live at settings.site.ministries
+   as {name, when, place, blurb} in the leaders' chosen order.
+   The editor below keeps its working copy in S.siteMinistries
+   (the inputs write straight into it) and the tab's save cleans
+   it the same way the public page's door does: trimmed, capped,
+   nameless entries dropped, twelve at most. ------------------- */
+function siteMinistriesClean(list) {
+  return (Array.isArray(list) ? list : [])
+    .map((m) => ({
+      name: String((m && m.name) || '').trim().slice(0, 80),
+      when: String((m && m.when) || '').trim().slice(0, 80),
+      place: String((m && m.place) || '').trim().slice(0, 120),
+      blurb: String((m && m.blurb) || '').trim().slice(0, 240),
+    }))
+    .filter((m) => m.name)
+    .slice(0, 12);
+}
+function renderSiteMinistries() {
+  const box = $('site-ministries');
+  box.replaceChildren();
+  if (S.siteMinistries.length === 0) {
+    box.appendChild(h('p', 'muted', 'No ministries listed yet.'));
+    return;
+  }
+  S.siteMinistries.forEach((m, i) => {
+    const row = h('div', 'minrow');
+    const fields = [
+      ['name', 'Ministry name', 80, false],
+      ['when', 'When it meets', 80, false],
+      ['place', 'Where it meets', 120, false],
+      ['blurb', 'A sentence about it', 240, true],
+    ];
+    for (const [key, label, max, area] of fields) {
+      const lab = h('label', null, label);
+      const input = document.createElement(area ? 'textarea' : 'input');
+      if (!area) input.type = 'text';
+      if (area) input.rows = 2;
+      input.maxLength = max;
+      input.value = m[key] || '';
+      input.addEventListener('input', () => { S.siteMinistries[i][key] = input.value; });
+      lab.appendChild(input);
+      row.appendChild(lab);
+    }
+    const actions = h('div', 'row-actions');
+    const up = h('button', 'btn secondary small', 'Move up');
+    up.type = 'button';
+    up.disabled = i === 0;
+    up.addEventListener('click', () => moveSiteMinistry(i, -1));
+    const down = h('button', 'btn secondary small', 'Move down');
+    down.type = 'button';
+    down.disabled = i === S.siteMinistries.length - 1;
+    down.addEventListener('click', () => moveSiteMinistry(i, 1));
+    const rm = h('button', 'btn danger small', 'Remove');
+    rm.type = 'button';
+    rm.addEventListener('click', () => {
+      S.siteMinistries.splice(i, 1);
+      renderSiteMinistries();
+    });
+    actions.appendChild(up);
+    actions.appendChild(down);
+    actions.appendChild(rm);
+    row.appendChild(actions);
+    box.appendChild(row);
+  });
+}
+function moveSiteMinistry(i, delta) {
+  const j = i + delta;
+  if (j < 0 || j >= S.siteMinistries.length) return;
+  const t = S.siteMinistries[i];
+  S.siteMinistries[i] = S.siteMinistries[j];
+  S.siteMinistries[j] = t;
+  renderSiteMinistries();
+}
+$('site-ministry-add').addEventListener('click', () => {
+  if (S.siteMinistries.length >= 12) {
+    setMsg('site-msg', 'Twelve ministries is the most the site holds.', 'err');
+    return;
+  }
+  S.siteMinistries.push({ name: '', when: '', place: '', blurb: '' });
+  renderSiteMinistries();
+});
+$('site-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const giving = $('site-giving').value.trim();
+  if (giving && !/^https:\/\//i.test(giving)) {
+    setMsg('site-msg', 'The giving link needs to start with https:// — copy the full address of your giving page.', 'err');
+    return;
+  }
+  const givingCh = $('site-giving-canadahelps').value.trim();
+  if (givingCh && !/^https:\/\//i.test(givingCh)) {
+    setMsg('site-msg', 'The CanadaHelps link needs to start with https:// — copy the full address of your CanadaHelps page.', 'err');
+    return;
+  }
+  $('site-save').disabled = true;
+  await saveSiteSettings();
+  $('site-save').disabled = false;
+});
+/* Save the site address: shape first (local), then availability
+   through the church-site function (it answers for every group,
+   and always says yes to the address's own church), then the
+   same read-merge-write of settings.site the rest of the tab
+   uses. Clearing the field takes a saved address back off. */
+$('site-slug-save').addEventListener('click', async () => {
+  if (!S.settings) {
+    setMsg('site-slug-msg', 'Your site details are still loading — try again in a moment.', 'err');
+    return;
+  }
+  const slug = $('site-slug').value.trim().toLowerCase();
+  $('site-slug').value = slug;
+  const writeSite = async (nextSite) => {
+    const next = { ...S.settings, site: nextSite };
+    const { error } = await client.from('groups').update({ settings: next }).eq('id', S.churchGroupId);
+    if (error) return false;
+    S.settings = next;
+    return true;
+  };
+  if (!slug) {
+    if (!S.siteSlug) {
+      setMsg('site-slug-msg', 'Type an address first — a word or two from your church’s name works well.', 'err');
+      return;
+    }
+    const site = { ...(S.settings.site && typeof S.settings.site === 'object' ? S.settings.site : {}) };
+    delete site.slug;
+    if (!(await writeSite(site))) {
+      setMsg('site-slug-msg', 'That did not save. Check your connection and try again.', 'err');
+      return;
+    }
+    S.siteSlug = '';
+    updateSiteLinks();
+    setMsg('site-slug-msg', 'Site address removed — your long address still works.', 'ok');
+    return;
+  }
+  if (slug === S.siteSlug) {
+    setMsg('site-slug-msg', 'That’s already your address.', 'ok');
+    return;
+  }
+  const problem = slugProblemText(slug);
+  if (problem) { setMsg('site-slug-msg', problem, 'err'); return; }
+  const btn = $('site-slug-save');
+  btn.disabled = true;
+  setMsg('site-slug-msg', 'Checking that address…');
+  let verdict = null;
+  try {
+    const resp = await fetch(
+      SUPABASE_URL + '/functions/v1/church-site?check=' + encodeURIComponent(slug) +
+        '&for=' + encodeURIComponent(S.churchGroupId),
+      { headers: { apikey: SUPABASE_ANON_KEY } },
+    );
+    if (resp.ok) verdict = await resp.json();
+  } catch (_e) { /* verdict stays null — handled below */ }
+  if (!verdict || typeof verdict.available !== 'boolean') {
+    btn.disabled = false;
+    setMsg('site-slug-msg', 'The address checker isn’t answering just now, so nothing was saved. Try again in a moment.', 'err');
+    return;
+  }
+  if (!verdict.available) {
+    btn.disabled = false;
+    setMsg('site-slug-msg',
+      verdict.reason === 'reserved'
+        ? 'That word belongs to Your People itself — try adding your town, or the word church.'
+        : verdict.reason === 'invalid'
+          ? 'That address doesn’t fit the rules — lowercase letters, numbers and hyphens, 3 to 40 characters.'
+          : 'Another church already uses that address. Try a small change — add your town, or the word church.',
+      'err');
+    return;
+  }
+  const site = S.settings.site && typeof S.settings.site === 'object' ? { ...S.settings.site } : {};
+  site.slug = slug;
+  const saved = await writeSite(site);
+  btn.disabled = false;
+  if (!saved) {
+    setMsg('site-slug-msg', 'That did not save. Check your connection and try again.', 'err');
+    return;
+  }
+  S.siteSlug = slug;
+  updateSiteLinks();
+  setMsg('site-slug-msg', 'Saved — your church site now answers to yourpeople.church/' + slug + '.', 'ok');
+});
+function renderSitePhotos() {
+  const box = $('site-photos');
+  box.replaceChildren();
+  syncSitePhotoControls();
+  if (S.sitePhotos.length === 0) {
+    box.appendChild(h('p', 'muted', 'No photos yet — your site looks complete without them, and you can add some any time.'));
+    return;
+  }
+  S.sitePhotos.forEach((path, i) => {
+    const fig = h('figure');
+    const url = sitePhotoUrl(path);
+    if (url) {
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = '';
+      fig.appendChild(img);
+    }
+    const cap = h('figcaption');
+    if (i === 0) cap.appendChild(h('div', 'hint', 'Banner photo'));
+    const rm = h('button', 'btn danger small', 'Remove');
+    rm.type = 'button';
+    rm.addEventListener('click', () => removeSitePhoto(path));
+    cap.appendChild(rm);
+    fig.appendChild(cap);
+    box.appendChild(fig);
+  });
+}
+async function probeSiteBucket() {
+  if (S.siteBucketOk !== null) { renderSiteBucketState(); return; }
+  try {
+    const { error } = await client.storage.from('church-site-photos').list(S.churchGroupId, { limit: 1 });
+    S.siteBucketOk = !error;
+  } catch (_e) {
+    S.siteBucketOk = false;
+  }
+  renderSiteBucketState();
+}
+/* The add-photo controls and the two notes below them (setup
+   pending / at the photo cap) are mutually exclusive states of
+   the same corner of the tab; this keeps them in step whenever
+   the list or the bucket probe changes. Before the probe
+   answers, the bucket-driven states are left as they are and
+   only the cap is applied. */
+function syncSitePhotoControls() {
+  const atCap = S.sitePhotos.length >= SITE_PHOTO_MAX;
+  if (S.siteBucketOk !== null) {
+    const ready = S.siteBucketOk === true;
+    $('site-photo-controls').classList.toggle('hidden', !ready || atCap);
+    $('site-photo-setup').classList.toggle('hidden', ready);
+  } else if (atCap) {
+    $('site-photo-controls').classList.add('hidden');
+  }
+  $('site-photo-cap').classList.toggle('hidden', !(atCap && S.siteBucketOk !== false));
+}
+function renderSiteBucketState() {
+  syncSitePhotoControls();
+}
+$('site-photo-upload').addEventListener('click', async () => {
+  const input = $('site-photo-file');
+  const file = input.files && input.files[0];
+  if (!file) { setMsg('site-photos-msg', 'Choose a photo first.', 'err'); return; }
+  if (S.sitePhotos.length >= SITE_PHOTO_MAX) {
+    setMsg('site-photos-msg', SITE_PHOTO_CAP_MSG, 'err');
+    return;
+  }
+  const btn = $('site-photo-upload');
+  btn.disabled = true;
+  setMsg('site-photos-msg', 'Adding your photo…');
+  const prepared = await prepareSitePhoto(file);
+  const safeName = (prepared.name || 'photo').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-60);
+  const path = S.churchGroupId + '/' + Date.now() + '-' + safeName;
+  const opts = prepared.blob && prepared.blob.type ? { contentType: prepared.blob.type } : undefined;
+  const { error } = await client.storage.from('church-site-photos').upload(path, prepared.blob, opts);
+  btn.disabled = false;
+  if (error) {
+    const m = (error.message || '').toLowerCase();
+    if (m.includes('bucket') || m.includes('not found') || m.includes('404')) {
+      S.siteBucketOk = false;
+      renderSiteBucketState();
+      setMsg('site-photos-msg', '', '');
+    } else {
+      setMsg('site-photos-msg', 'That photo did not upload. Check your connection and try again.', 'err');
+    }
+    return;
+  }
+  input.value = '';
+  S.sitePhotos.push(path);
+  renderSitePhotos();
+  await saveSiteSettings('Photo added — your church site shows it now.');
+  setMsg('site-photos-msg', '');
+});
+async function removeSitePhoto(path) {
+  if (!window.confirm('Remove this photo from your church site?')) return;
+  await client.storage.from('church-site-photos').remove([path]);
+  S.sitePhotos = S.sitePhotos.filter((p) => p !== path);
+  renderSitePhotos();
+  await saveSiteSettings('Photo removed.');
+}
+
+
+/* ================= CHURCH: sermons (Sermon preparation) =================
+/* ================= LEADER: lessons ================= */
+async function loadChurchSermons() {
+  setMsg('clessons-msg', 'Loading lessons…');
+  const { data, error } = await client
+    .from('sermons')
+    .select('*')
+    .eq('group_id', S.churchGroupId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) {
+    S.cLessons = [];
+    renderChurchSermonList();
+    setMsg('clessons-msg', 'Lessons could not load. Check your connection and try again.', 'err');
+    return;
+  }
+  S.cLessons = data || [];
+  setMsg('clessons-msg', '');
+  renderChurchSermonList();
+}
+function renderChurchSermonList() {
+  const box = $('clesson-list');
+  box.replaceChildren();
+  if (S.cLessons.length === 0) {
+    box.appendChild(h('p', 'muted', 'No lessons yet — write your first.'));
+    return;
+  }
+  for (const l of S.cLessons) {
+    const b = h('button', 'listitem' + (l.id === S.cEditingId ? ' active' : ''));
+    b.type = 'button';
+    const t = h('span', 't', l.title);
+    const badge = h('span', 'badge ' + (l.is_draft ? 'draft' : 'live'), l.is_draft ? 'Draft' : 'Published');
+    t.appendChild(badge);
+    b.appendChild(t);
+    b.appendChild(h('span', 's', (l.passage_ref || 'No passage') + ' · ' + fmtDay(l.created_at)));
+    b.addEventListener('click', () => openChurchSermon(l.id));
+    box.appendChild(b);
+  }
+}
+function resetChurchEditor() {
+  S.cEditingId = null;
+  $('ceditor-heading').textContent = 'Write a lesson';
+  $('clf-title').value = '';
+  $('clf-passage').value = '';
+  $('clf-body').value = '';
+  $('clf-closing').value = '';
+  $('clf-video').value = '';
+  $('clf-publish').textContent = 'Post lesson';
+  $('clf-delete').classList.add('hidden');
+  setMsg('clf-msg', '');
+  setMsg('cassist-msg', '');
+  cUpdateWordCount();
+  cwsFollowPassage();
+  renderChurchSermonList();
+}
+function openChurchSermon(id) {
+  const l = S.cLessons.find((x) => x.id === id);
+  if (!l) return;
+  S.cEditingId = id;
+  $('ceditor-heading').textContent = 'Edit lesson';
+  $('clf-title').value = l.title || '';
+  $('clf-passage').value = l.passage_ref || '';
+  $('clf-body').value = l.body || '';
+  $('clf-closing').value = l.closing_prompt || '';
+  $('clf-video').value = l.video_url || '';
+  $('clf-publish').textContent = l.is_draft ? 'Post lesson' : 'Save changes';
+  $('clf-delete').classList.remove('hidden');
+  setMsg('clf-msg', '');
+  setMsg('cassist-msg', '');
+  cUpdateWordCount();
+  cwsFollowPassage();
+  renderChurchSermonList();
+}
+$('clesson-new').addEventListener('click', resetChurchEditor);
+
+async function saveChurchSermon(asDraft) {
+  const title = $('clf-title').value.trim();
+  const body = $('clf-body').value.trim();
+  if (!title) { setMsg('clf-msg', 'Give the lesson a title first.', 'err'); return; }
+  if (!body) { setMsg('clf-msg', 'Write the lesson first — the teaching itself is the post.', 'err'); return; }
+  const video = $('clf-video').value.trim();
+  const closing = $('clf-closing').value.trim();
+  const fields = {
+    title,
+    passage_ref: $('clf-passage').value.trim(),
+    body,
+    video_url: video ? video : null,
+    closing_prompt: closing ? closing : null,
+    is_draft: asDraft,
+  };
+  const pubBtn = $('clf-publish'), draftBtn = $('clf-draft');
+  pubBtn.disabled = true; draftBtn.disabled = true;
+  let res;
+  if (S.cEditingId) {
+    res = await client.from('sermons').update(fields).eq('id', S.cEditingId).select('*').single();
+  } else {
+    res = await client.from('sermons')
+      .insert({ group_id: S.churchGroupId, author_id: S.user.id, ...fields })
+      .select('*').single();
+  }
+  pubBtn.disabled = false; draftBtn.disabled = false;
+  if (res.error || !res.data) {
+    setMsg('clf-msg', 'That lesson did not save. Check your connection and try again — your text is still here.', 'err');
+    return;
+  }
+  S.cEditingId = res.data.id;
+  await loadChurchSermons();
+  openChurchSermon(res.data.id);
+  setMsg('clf-msg', asDraft
+    ? 'Draft saved — only leaders can see it, and it is not in the Bible tab.'
+    : 'Lesson posted — your group can read it in the Bible tab now.', 'ok');
+}
+$('clesson-form').addEventListener('submit', (ev) => { ev.preventDefault(); saveChurchSermon(false); });
+$('clf-draft').addEventListener('click', () => saveChurchSermon(true));
+$('clf-delete').addEventListener('click', async () => {
+  if (!S.cEditingId) return;
+  const l = S.cLessons.find((x) => x.id === S.cEditingId);
+  if (!window.confirm('Delete "' + (l ? l.title : 'this lesson') + '"? Your group will no longer see it.')) return;
+  const { error } = await client.from('sermons').delete().eq('id', S.cEditingId);
+  if (error) {
+    setMsg('clf-msg', 'That lesson could not be deleted. Check your connection and try again.', 'err');
+    return;
+  }
+  resetChurchEditor();
+  await loadChurchSermons();
+  setMsg('clessons-msg', 'Lesson deleted.', 'ok');
+});
+
+/* ---------- sermon assist (same function the app calls) ---------- */
+async function callChurchAssist(payload) {
+  const { data: sess } = await client.auth.getSession();
+  const token = sess && sess.session ? sess.session.access_token : '';
+  const resp = await fetch(SUPABASE_URL + '/functions/v1/assist', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+      'apikey': SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify(payload),
+  });
+  let json = null;
+  try { json = await resp.json(); } catch (e) { /* non-JSON answer */ }
+  return { status: resp.status, json };
+}
+async function probeChurchAssist() {
+  if (S.cAssistOk !== null) { renderChurchAssistState(); return; }
+  try {
+    const r = await callChurchAssist({ kind: 'ping' });
+    S.cAssistOk = !!(r.json && r.json.ok === true);
+  } catch (e) {
+    S.cAssistOk = false;
+  }
+  renderChurchAssistState();
+}
+function renderChurchAssistState() {
+  const buttons = $('cassist-buttons');
+  if (S.cAssistOk === false) {
+    buttons.classList.add('hidden');
+    setMsg('cassist-msg', 'Sermon assist isn’t available right now. Your text is unchanged.');
+  } else {
+    buttons.classList.remove('hidden');
+  }
+}
+document.querySelectorAll('[data-assist]').forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    const mode = btn.getAttribute('data-assist');
+    const title = $('clf-title').value.trim();
+    const passage = $('clf-passage').value.trim();
+    const notes = $('clf-body').value;
+    if (mode === 'tighten') {
+      if (!notes.trim()) { setMsg('cassist-msg', 'Write the lesson first — this works on text you’ve already written.', 'err'); return; }
+    } else if (!passage && !notes.trim() && !title) {
+      setMsg('cassist-msg', 'Add a title, a passage, or a few notes first, then try again.', 'err'); return;
+    }
+    const series = [...S.cLessons]
+      .filter((l) => l.id !== S.cEditingId)
+      .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
+      .slice(-8)
+      .map((l) => ({ title: l.title, passageRef: l.passage_ref || '' }));
+    const all = document.querySelectorAll('[data-assist]');
+    all.forEach((b) => { b.disabled = true; });
+    setMsg('cassist-msg', 'Working on it…');
+    try {
+      const r = await callChurchAssist({ kind: 'sermon', mode, title, passage, notes, series });
+      if (r.status === 501 || (r.json && r.json.error === 'not-configured')) {
+        S.cAssistOk = false; renderChurchAssistState();
+        setMsg('cassist-msg', 'Sermon assist isn’t available right now. Your text is unchanged.');
+        return;
+      }
+      if (r.json && typeof r.json.text === 'string' && r.json.text.trim()) {
+        const text = r.json.text.trim();
+        if (mode === 'tighten' || !$('clf-body').value.trim()) {
+          $('clf-body').value = text;
+        } else {
+          $('clf-body').value = $('clf-body').value.replace(/\s+$/, '') + '\n\n' + text;
+        }
+        cUpdateWordCount();
+        setMsg('cassist-msg', 'Added — make it yours before you post it.', 'ok');
+      } else {
+        setMsg('cassist-msg', 'That didn’t work just now. Your text is unchanged — try again in a moment.', 'err');
+      }
+    } catch (e) {
+      setMsg('cassist-msg', 'That didn’t work just now. Your text is unchanged — try again in a moment.', 'err');
+    } finally {
+      all.forEach((b) => { b.disabled = false; });
+    }
+  });
+});
+
+/* ================= LESSON WORKSTATION =================
+   Study tools flanking the lesson editor (leaders only — the
+   rails live inside the leader desk, and nothing here is
+   fetched until a leader first opens the Lessons tab). Everything reads
+   from the Free Use Bible API (bible.helloao.org): public-domain
+   texts (BSB, WEB, KJV), OpenBible.info cross-references
+   (CC BY 4.0), public-domain commentaries, the Berean
+   Interlinear (public domain) and STEPBible brief lexicons
+   (CC BY 4.0). No keys, no account. Every panel fails on its
+   own — a dead lookup shows a note in that panel and never
+   touches the editor, the drafts or the publish flow. -------- */
+
+/* ---------- word count -> reading time ---------- */
+function churchSermonWordCount() {
+  const t = $('clf-body').value.trim();
+  return t ? t.split(/\s+/).length : 0;
+}
+function cUpdateWordCount() {
+  const n = churchSermonWordCount();
+  const rate = parseInt($('clf-wpm').value, 10) || 130;
+  const mins = Math.round(n / rate);
+  $('clf-words').textContent =
+    n + (n === 1 ? ' word' : ' words') + ' · ≈ ' + mins + ' min at ' + rate + ' wpm';
+}
+$('clf-body').addEventListener('input', cUpdateWordCount);
+$('clf-wpm').addEventListener('change', cUpdateWordCount);
+
+/* ---------- references ---------- */
+const CWS_BOOK_LIST = [
+  ['GEN', 'Genesis', 'gen'], ['EXO', 'Exodus', 'exod'], ['LEV', 'Leviticus', 'lev'],
+  ['NUM', 'Numbers', 'num'], ['DEU', 'Deuteronomy', 'deut'], ['JOS', 'Joshua', 'josh'],
+  ['JDG', 'Judges', 'judg'], ['RUT', 'Ruth', 'ruth'], ['1SA', '1 Samuel', '1 sam'],
+  ['2SA', '2 Samuel', '2 sam'], ['1KI', '1 Kings', '1 kin'], ['2KI', '2 Kings', '2 kin'],
+  ['1CH', '1 Chronicles', '1 chr'], ['2CH', '2 Chronicles', '2 chr'], ['EZR', 'Ezra', 'ezra'],
+  ['NEH', 'Nehemiah', 'neh'], ['EST', 'Esther', 'esth'], ['JOB', 'Job', 'job'],
+  ['PSA', 'Psalms', 'ps|psa|psalm'], ['PRO', 'Proverbs', 'prov'], ['ECC', 'Ecclesiastes', 'eccl'],
+  ['SNG', 'Song of Songs', 'song|song of solomon|canticles'], ['ISA', 'Isaiah', 'isa'],
+  ['JER', 'Jeremiah', 'jer'], ['LAM', 'Lamentations', 'lam'], ['EZK', 'Ezekiel', 'ezek'],
+  ['DAN', 'Daniel', 'dan'], ['HOS', 'Hosea', 'hos'], ['JOL', 'Joel', 'joel'],
+  ['AMO', 'Amos', 'amos'], ['OBA', 'Obadiah', 'obad'], ['JON', 'Jonah', 'jonah'],
+  ['MIC', 'Micah', 'mic'], ['NAM', 'Nahum', 'nah'], ['HAB', 'Habakkuk', 'hab'],
+  ['ZEP', 'Zephaniah', 'zeph'], ['HAG', 'Haggai', 'hag'], ['ZEC', 'Zechariah', 'zech'],
+  ['MAL', 'Malachi', 'mal'], ['MAT', 'Matthew', 'matt|mt'], ['MRK', 'Mark', 'mk'],
+  ['LUK', 'Luke', 'lk'], ['JHN', 'John', 'jn'], ['ACT', 'Acts', 'acts'],
+  ['ROM', 'Romans', 'rom'], ['1CO', '1 Corinthians', '1 cor'], ['2CO', '2 Corinthians', '2 cor'],
+  ['GAL', 'Galatians', 'gal'], ['EPH', 'Ephesians', 'eph'], ['PHP', 'Philippians', 'phil'],
+  ['COL', 'Colossians', 'col'], ['1TH', '1 Thessalonians', '1 thess'], ['2TH', '2 Thessalonians', '2 thess'],
+  ['1TI', '1 Timothy', '1 tim'], ['2TI', '2 Timothy', '2 tim'], ['TIT', 'Titus', 'tit'],
+  ['PHM', 'Philemon', 'philem'], ['HEB', 'Hebrews', 'heb'], ['JAS', 'James', 'jas'],
+  ['1PE', '1 Peter', '1 pet'], ['2PE', '2 Peter', '2 pet'], ['1JN', '1 John', '1 jn'],
+  ['2JN', '2 John', '2 jn'], ['3JN', '3 John', '3 jn'], ['JUD', 'Jude', 'jude'],
+  ['REV', 'Revelation', 'rev'],
+];
+const CWS_BOOK_NAME = {};
+const CWS_BOOK_ALIAS = {};
+for (const [id, name, aliases] of CWS_BOOK_LIST) {
+  CWS_BOOK_NAME[id] = name;
+  CWS_BOOK_ALIAS[name.toLowerCase()] = id;
+  CWS_BOOK_ALIAS[name.toLowerCase().replace(/\s+/g, '')] = id;
+  if (aliases) {
+    for (const a of aliases.split('|')) {
+      CWS_BOOK_ALIAS[a] = id;
+      CWS_BOOK_ALIAS[a.replace(/\s+/g, '')] = id;
+    }
+  }
+}
+/* "John 10:11–18", "Psalm 23", "1 Jn 1:9" -> {book, chapter, vStart, vEnd}.
+   vStart null means the whole chapter. Unreadable -> null. */
+function cwsParseRef(raw) {
+  if (!raw) return null;
+  let s = String(raw).trim().toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/'/g, '');
+  s = s.replace(/\s+/g, ' ');
+  s = s.replace(/^(first|second|third)\s+/, (m, p) => ({ first: '1 ', second: '2 ', third: '3 ' })[p]);
+  s = s.replace(/^(iii|ii|i)\s+/, (m, p) => ({ i: '1 ', ii: '2 ', iii: '3 ' })[p]);
+  const m = s.match(/^([1-3]?\s?[a-z][a-z .]*?)\s+(\d+)(?:\s*[:.]\s*(\d+))?(?:\s*[-\u2013\u2014]\s*(?:(\d+)\s*[:.]\s*)?(\d+))?\s*$/);
+  if (!m) return null;
+  const bookKey = m[1].replace(/\./g, '').trim();
+  const book = CWS_BOOK_ALIAS[bookKey] || CWS_BOOK_ALIAS[bookKey.replace(/\s+/g, '')];
+  if (!book) return null;
+  const chapter = parseInt(m[2], 10);
+  const vStart = m[3] ? parseInt(m[3], 10) : null;
+  let vEnd = vStart;
+  if (m[5]) {
+    const endCh = m[4] ? parseInt(m[4], 10) : chapter;
+    vEnd = endCh === chapter ? parseInt(m[5], 10) : 9999;
+  }
+  if (vStart !== null && vEnd !== null && vEnd < vStart) vEnd = vStart;
+  return { book, chapter, vStart, vEnd };
+}
+function cwsRefLabel(p) {
+  let s = CWS_BOOK_NAME[p.book] + ' ' + p.chapter;
+  if (p.vStart) {
+    s += ':' + p.vStart;
+    if (p.vEnd && p.vEnd !== p.vStart && p.vEnd !== 9999) s += '\u2013' + p.vEnd;
+  }
+  return s;
+}
+
+/* ---------- workstation state + data ---------- */
+const CWS_API = 'https://bible.helloao.org/api';
+const CWS_TRANS_NAME = {
+  BSB: 'Berean Standard Bible', ENGWEBP: 'World English Bible', eng_kjv: 'King James Version',
+};
+const CWS = {
+  inited: false,
+  passage: null,
+  seqReader: 0, seqXref: 0, seqComm: 0, seqChips: 0,
+  cache: new Map(),        // url -> Promise<json> (failures are evicted)
+  interlinear: new Map(),  // 'BOOK chapter' -> Promise<json>
+  lexIndex: null,          // Promise<entries[]> — the 2 MB lexicon index, lazy
+};
+function cwsJson(url) {
+  if (!CWS.cache.has(url)) {
+    const p = fetch(url).then((r) => {
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    });
+    p.catch(() => CWS.cache.delete(url));
+    CWS.cache.set(url, p);
+  }
+  return CWS.cache.get(url);
+}
+function cwsInterlinear(p) {
+  const key = p.book + ' ' + p.chapter;
+  if (!CWS.interlinear.has(key)) {
+    CWS.interlinear.set(key, cwsJson(CWS_API + '/d/bsb-interlinear/' + p.book + '/' + p.chapter + '.json'));
+  }
+  return CWS.interlinear.get(key);
+}
+/* A long text that starts folded, with a Read more toggle. */
+function cwsTextBlock(text, cls) {
+  const wrap = h('div');
+  const body = h('div', cls, text);
+  wrap.appendChild(body);
+  if (text.length > 650) {
+    body.classList.add('cws-clamp');
+    const btn = h('button', 'cws-more', 'Read more');
+    btn.type = 'button';
+    btn.addEventListener('click', () => {
+      const clamped = body.classList.toggle('cws-clamp');
+      btn.textContent = clamped ? 'Read more' : 'Show less';
+    });
+    wrap.appendChild(btn);
+  }
+  return wrap;
+}
+/* helloao verse content is strings plus small objects ({text} runs,
+   {noteId} footnote markers). Only readable text is read aloud. */
+function cwsFragText(frag) {
+  if (typeof frag === 'string') return frag;
+  if (frag && typeof frag.text === 'string') return frag.text;
+  return '';
+}
+
+/* ---------- following the lesson's passage ---------- */
+function cwsMaybeInit() {
+  if (CWS.inited || !churchIsLeaderHere()) return;
+  CWS.inited = true;
+  try { cwsFollowPassage(); } catch (e) { /* the editor never depends on the tools */ }
+}
+let cwsFollowTimer = null;
+function cwsFollowPassage() {
+  if (!CWS.inited) return;
+  const raw = $('clf-passage').value.trim();
+  if (!raw) { cwsClearPassage(); return; }
+  const p = cwsParseRef(raw);
+  if (p) cwsSetPassage(p);
+}
+$('clf-passage').addEventListener('input', () => {
+  if (!CWS.inited) return;
+  clearTimeout(cwsFollowTimer);
+  cwsFollowTimer = setTimeout(cwsFollowPassage, 700);
+});
+$('clf-passage').addEventListener('change', cwsFollowPassage);
+function cwsSamePassage(a, b) {
+  return !!a && !!b && a.book === b.book && a.chapter === b.chapter &&
+    a.vStart === b.vStart && a.vEnd === b.vEnd;
+}
+function cwsSetPassage(p) {
+  if (cwsSamePassage(CWS.passage, p)) return;
+  CWS.passage = p;
+  cwsRenderReader(++CWS.seqReader);
+  cwsRenderXrefs(++CWS.seqXref);
+  cwsRenderCommentaries(++CWS.seqComm);
+  cwsRenderChips(++CWS.seqChips);
+}
+function cwsClearPassage() {
+  if (!CWS.passage) return;
+  CWS.passage = null;
+  CWS.seqReader++; CWS.seqXref++; CWS.seqComm++; CWS.seqChips++;
+  $('cws-reader-zone').replaceChildren(h('p', 'hint',
+    'The passage from your lesson appears here — or look one up above. The study tools follow the passage.'));
+  $('cws-xref-zone').replaceChildren(h('p', 'hint',
+    'Passages that speak to this one, in the Treasury of Scripture Knowledge tradition. Tap one to read it.'));
+  $('cws-comm-zone').replaceChildren(h('p', 'hint',
+    'Two trusted voices on the passage, each labelled with its era — servants for your study, never masters of it.'));
+  $('cws-chips-zone').replaceChildren();
+  $('cws-prev-ch').classList.add('hidden');
+  $('cws-next-ch').classList.add('hidden');
+}
+
+/* ---------- panel collapse (every width; the phone relies on it) ---------- */
+document.querySelectorAll('[data-cws-toggle]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const panel = $(btn.getAttribute('data-cws-toggle'));
+    if (!panel) return;
+    const closed = panel.classList.toggle('closed');
+    const chev = btn.querySelector('.ws-chev');
+    if (chev) chev.textContent = closed ? '\u25B8' : '\u25BE';
+  });
+});
+
+/* ---------- left rail: the passage ---------- */
+$('cws-ref-form').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const p = cwsParseRef($('cws-ref').value);
+  if (!p) {
+    $('cws-reader-zone').replaceChildren(h('p', 'hint',
+      'That reference could not be read — try \u201CJohn 10:11\u201D or \u201CPsalm 23\u201D.'));
+    return;
+  }
+  cwsSetPassage(p);
+});
+$('cws-trans').addEventListener('change', () => { if (CWS.passage) cwsRenderReader(++CWS.seqReader); });
+$('cws-trans2').addEventListener('change', () => {
+  if (CWS.passage && $('cws-parallel').checked) cwsRenderReader(++CWS.seqReader);
+});
+$('cws-parallel').addEventListener('change', () => {
+  $('cws-trans2').classList.toggle('hidden', !$('cws-parallel').checked);
+  if (CWS.passage) cwsRenderReader(++CWS.seqReader);
+});
+function cwsRenderChapterInto(zone, data, p, transId) {
+  zone.appendChild(h('div', 'cws-passage', cwsRefLabel(p)));
+  zone.appendChild(h('p', 'cws-trans-name', CWS_TRANS_NAME[transId] || transId));
+  const reader = h('div', 'cws-reader');
+  let para = null;
+  const newPara = () => { para = h('p'); reader.appendChild(para); };
+  newPara();
+  for (const item of (data.chapter && data.chapter.content) || []) {
+    if (item.type === 'heading') {
+      reader.appendChild(h('div', 'cws-vhead', (item.content || []).map(cwsFragText).join('')));
+      newPara();
+    } else if (item.type === 'line_break') {
+      newPara();
+    } else if (item.type === 'verse') {
+      const span = h('span', 'cws-verse');
+      span.dataset.v = item.number;
+      if (p.vStart && item.number >= p.vStart && item.number <= (p.vEnd || p.vStart)) {
+        span.classList.add('cws-hl');
+      }
+      span.appendChild(h('sup', 'cws-vn', String(item.number)));
+      span.appendChild(document.createTextNode((item.content || []).map(cwsFragText).join('') + ' '));
+      para.appendChild(span);
+    }
+  }
+  for (const child of [...reader.children]) {
+    if (child.tagName === 'P' && !child.textContent.trim()) child.remove();
+  }
+  zone.appendChild(reader);
+}
+async function cwsRenderReader(seq) {
+  const p = CWS.passage;
+  if (!p) return;
+  const zone = $('cws-reader-zone');
+  zone.replaceChildren(h('p', 'hint', 'Loading ' + cwsRefLabel(p) + '…'));
+  const trans = $('cws-trans').value;
+  try {
+    const data = await cwsJson(CWS_API + '/' + trans + '/' + p.book + '/' + p.chapter + '.json');
+    if (seq !== CWS.seqReader) return;
+    zone.replaceChildren();
+    cwsRenderChapterInto(zone, data, p, trans);
+    if ($('cws-parallel').checked) {
+      const t2 = $('cws-trans2').value;
+      if (t2 !== trans) {
+        try {
+          const d2 = await cwsJson(CWS_API + '/' + t2 + '/' + p.book + '/' + p.chapter + '.json');
+          if (seq !== CWS.seqReader) return;
+          cwsRenderChapterInto(zone, d2, p, t2);
+        } catch (e) {
+          zone.appendChild(h('p', 'hint', 'The parallel translation could not load just now.'));
+        }
+      }
+    }
+    cwsUpdateChapterNav(data);
+    const hl = zone.querySelector('.ws-verse.ws-hl');
+    if (hl) {
+      const rail = $('cws-left');
+      rail.scrollTop += hl.getBoundingClientRect().top - rail.getBoundingClientRect().top - 70;
+    }
+  } catch (e) {
+    if (seq !== CWS.seqReader) return;
+    zone.replaceChildren(h('p', 'hint',
+      'The Bible text could not load just now. Check your connection and try again — your lesson is unaffected.'));
+    $('cws-prev-ch').classList.add('hidden');
+    $('cws-next-ch').classList.add('hidden');
+  }
+}
+function cwsUpdateChapterNav(data) {
+  const set = (id, ref) => {
+    const btn = $(id);
+    if (ref && ref.book && CWS_BOOK_NAME[ref.book]) {
+      btn.classList.remove('hidden');
+      btn.querySelector('span').textContent = CWS_BOOK_NAME[ref.book] + ' ' + ref.chapter;
+      btn.onclick = () => cwsSetPassage({ book: ref.book, chapter: ref.chapter, vStart: null, vEnd: null });
+    } else {
+      btn.classList.add('hidden');
+      btn.onclick = null;
+    }
+  };
+  set('cws-prev-ch', data.previousChapterReference);
+  set('cws-next-ch', data.nextChapterReference);
+}
+
+/* ---------- left rail: cross-references ---------- */
+async function cwsRenderXrefs(seq) {
+  const p = CWS.passage;
+  if (!p) return;
+  const zone = $('cws-xref-zone');
+  zone.replaceChildren(h('p', 'hint', 'Loading cross-references…'));
+  try {
+    const data = await cwsJson(CWS_API + '/d/open-cross-ref/' + p.book + '/' + p.chapter + '.json');
+    if (seq !== CWS.seqXref) return;
+    const vFrom = p.vStart || 1;
+    const vTo = p.vEnd || 9999;
+    const best = new Map();
+    for (const row of (data.chapter && data.chapter.content) || []) {
+      if (row.verse < vFrom || row.verse > vTo) continue;
+      for (const r of row.references || []) {
+        if (r.book === p.book && r.chapter === p.chapter && r.verse >= vFrom && r.verse <= vTo) continue;
+        const key = r.book + '|' + r.chapter + '|' + r.verse + '|' + (r.endVerse || r.verse);
+        if (!best.has(key) || best.get(key).score < r.score) best.set(key, r);
+      }
+    }
+    const refs = [...best.values()].sort((a, b) => b.score - a.score).slice(0, 30);
+    zone.replaceChildren();
+    if (!refs.length) {
+      zone.appendChild(h('p', 'hint', 'No cross-references are recorded for this passage.'));
+      return;
+    }
+    const list = h('div', 'cws-xref-list');
+    for (const r of refs) {
+      const label = CWS_BOOK_NAME[r.book] + ' ' + r.chapter + ':' + r.verse +
+        (r.endVerse && r.endVerse !== r.verse ? '\u2013' + r.endVerse : '');
+      const b = h('button', 'cws-xref', label);
+      b.type = 'button';
+      b.addEventListener('click', () => {
+        $('cws-ref').value = label;
+        cwsSetPassage({ book: r.book, chapter: r.chapter, vStart: r.verse, vEnd: r.endVerse || r.verse });
+      });
+      list.appendChild(b);
+    }
+    zone.appendChild(list);
+  } catch (e) {
+    if (seq !== CWS.seqXref) return;
+    zone.replaceChildren(h('p', 'hint', 'Cross-references could not load just now. Your lesson is unaffected.'));
+  }
+}
+
+/* ---------- right rail: commentaries ---------- */
+const CWS_COMMENTARIES = [
+  { id: 'matthew-henry', label: 'Matthew Henry', era: 'Complete Commentary on the Whole Bible · early 1700s' },
+  { id: 'jamieson-fausset-brown', label: 'Jamieson, Fausset & Brown', era: 'Commentary, Critical, Experimental and Practical · 1871' },
+];
+function cwsCommBlock(text, onLabel) {
+  const wrap = h('div', 'cws-comm');
+  wrap.appendChild(h('p', 'cws-on', onLabel));
+  wrap.appendChild(cwsTextBlock(text, 'cws-text'));
+  return wrap;
+}
+async function cwsRenderCommentaries(seq) {
+  const p = CWS.passage;
+  if (!p) return;
+  const zone = $('cws-comm-zone');
+  zone.replaceChildren();
+  const vFrom = p.vStart || 1;
+  const vTo = p.vEnd || 9999;
+  for (const w of CWS_COMMENTARIES) {
+    const block = h('div', 'cws-work');
+    block.appendChild(h('p', 'cws-work-label', w.label));
+    block.appendChild(h('p', 'cws-work-era', w.era));
+    const bodyZone = h('div');
+    bodyZone.appendChild(h('p', 'hint', 'Loading…'));
+    block.appendChild(bodyZone);
+    zone.appendChild(block);
+    try {
+      const data = await cwsJson(CWS_API + '/c/' + w.id + '/' + p.book + '/' + p.chapter + '.json');
+      if (seq !== CWS.seqComm) return;
+      bodyZone.replaceChildren();
+      const lastV = data.numberOfVerses || 9999;
+      const items = ((data.chapter && data.chapter.content) || [])
+        .filter((i) => i.type === 'verse')
+        .sort((a, b) => a.number - b.number);
+      let shown = 0;
+      const intro = data.chapter && typeof data.chapter.introduction === 'string'
+        ? data.chapter.introduction.trim() : '';
+      if (intro && (!p.vStart || p.vStart === 1)) {
+        bodyZone.appendChild(cwsCommBlock(intro, 'Chapter introduction'));
+        shown++;
+      }
+      items.forEach((item, i) => {
+        const start = item.number;
+        const end = i + 1 < items.length ? items[i + 1].number - 1 : lastV;
+        if (end < vFrom || start > vTo) return;
+        const text = (item.content || []).map(cwsFragText).join('').trim();
+        if (!text) return;
+        const on = end === start ? 'On verse ' + start : 'On verses ' + start + '\u2013' + Math.min(end, lastV);
+        bodyZone.appendChild(cwsCommBlock(text, on));
+        shown++;
+      });
+      if (!shown) bodyZone.appendChild(h('p', 'hint', 'No comment on this passage in this work.'));
+    } catch (e) {
+      if (seq !== CWS.seqComm) return;
+      bodyZone.replaceChildren(h('p', 'hint', 'This commentary could not load just now.'));
+    }
+  }
+}
+
+/* ---------- right rail: word study ---------- */
+async function cwsRenderChips(seq) {
+  const p = CWS.passage;
+  const zone = $('cws-chips-zone');
+  zone.replaceChildren();
+  if (!p) return;
+  try {
+    const data = await cwsInterlinear(p);
+    if (seq !== CWS.seqChips) return;
+    const vFrom = p.vStart || 1;
+    const vTo = p.vEnd || 9999;
+    const seen = new Map();
+    for (const row of (data.chapter && data.chapter.content) || []) {
+      if (row.verse < vFrom || row.verse > vTo) continue;
+      for (const w of row.words || []) {
+        if (w.strongs && !seen.has(w.strongs)) seen.set(w.strongs, w);
+      }
+    }
+    const words = [...seen.values()].slice(0, 80);
+    if (!words.length) return;
+    zone.appendChild(h('p', 'hint', 'Words in this passage — tap one to study it:'));
+    const chips = h('div', 'cws-chips');
+    for (const w of words) {
+      const c = h('button', 'cws-chip');
+      c.type = 'button';
+      c.appendChild(document.createTextNode(w.gloss || w.text || ''));
+      c.appendChild(h('span', 'cws-chip-s', w.strongs));
+      c.title = (w.transliteration || '') + (w.parsingFull ? ' · ' + w.parsingFull : '');
+      c.addEventListener('click', () => { $('cws-word').value = w.strongs; cwsWordLookup(w.strongs); });
+      chips.appendChild(c);
+    }
+    zone.appendChild(chips);
+  } catch (e) { /* the chips are a bonus; the lookup box still works */ }
+}
+function cwsNormalizeStrongs(raw) {
+  const m = String(raw || '').trim().toUpperCase().match(/^([GH])0*(\d{1,4})$/);
+  if (!m) return null;
+  return m[1] + String(parseInt(m[2], 10)).padStart(4, '0');
+}
+async function cwsLexiconIndex() {
+  if (!CWS.lexIndex) {
+    CWS.lexIndex = cwsJson(CWS_API + '/d/stepbible-lexicon/lexicon.json')
+      .then((d) => d.lexicon || []);
+  }
+  return CWS.lexIndex;
+}
+$('cws-word-form').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  cwsWordLookup($('cws-word').value);
+});
+async function cwsWordLookup(raw) {
+  const zone = $('cws-word-zone');
+  const q = String(raw || '').trim();
+  if (!q) return;
+  zone.replaceChildren(h('p', 'hint', 'Looking up \u201C' + q + '\u201D…'));
+  try {
+    let ids = [];
+    const sid = cwsNormalizeStrongs(q);
+    if (sid) {
+      ids = [sid];
+    } else if (/[\u0370-\u05ff]/.test(q)) {
+      const idx = await cwsLexiconIndex();
+      ids = idx.filter((e) => e.name === q || (e.name && e.name.startsWith(q)))
+        .slice(0, 5).map((e) => e.id);
+      if (!ids.length) {
+        zone.replaceChildren(h('p', 'hint',
+          'No word like that was found in the brief lexicons. Try a Strong\u2019s number, e.g. G25.'));
+        return;
+      }
+    } else {
+      const p = CWS.passage;
+      if (!p) {
+        zone.replaceChildren(h('p', 'hint',
+          'Open a passage first — or type a Strong\u2019s number like G25 or H430.'));
+        return;
+      }
+      const data = await cwsInterlinear(p);
+      const want = q.toLowerCase();
+      const found = new Map();
+      for (const row of (data.chapter && data.chapter.content) || []) {
+        for (const w of row.words || []) {
+          if (!w.strongs) continue;
+          const g = (w.gloss || '').toLowerCase().replace(/[^a-z' -]/g, '').replace(/\s+/g, ' ').trim();
+          if (g === want || g.split(/[\s-]+/).includes(want)) {
+            if (!found.has(w.strongs)) found.set(w.strongs, w);
+          }
+        }
+      }
+      ids = [...found.keys()].slice(0, 6);
+      if (!ids.length) {
+        zone.replaceChildren(h('p', 'hint',
+          '\u201C' + q + '\u201D does not appear in ' + cwsRefLabel(p) +
+          ' in the Berean text. Try a word from the passage, or a Strong\u2019s number.'));
+        return;
+      }
+    }
+    const entries = [];
+    for (const id of ids) {
+      try {
+        entries.push(await cwsJson(CWS_API + '/d/stepbible-lexicon/lexicon/' + id + '.json'));
+      } catch (e) { /* a missing entry is skipped, never fatal */ }
+    }
+    if (!entries.length) {
+      zone.replaceChildren(h('p', 'hint', 'That lookup could not be completed just now.'));
+      return;
+    }
+    zone.replaceChildren();
+    for (const e of entries) zone.appendChild(await cwsRenderEntry(e));
+  } catch (err) {
+    zone.replaceChildren(h('p', 'hint',
+      'The word study could not load just now. Check your connection and try again — your lesson is unaffected.'));
+  }
+}
+async function cwsRenderEntry(data) {
+  const entry = data.entry || {};
+  const wrap = h('div', 'cws-entry');
+  const senses = entry.senses && entry.senses.length ? entry.senses : [entry];
+  for (const s of senses) {
+    const head = h('div');
+    head.appendChild(h('span', 'cws-lemma', s.lemma || entry.id || ''));
+    if (s.transliteration) head.appendChild(h('span', 'cws-translit', s.transliteration));
+    wrap.appendChild(head);
+    wrap.appendChild(h('p', 'cws-pos',
+      (entry.id || s.id || '') +
+      (s.partOfSpeech ? ' · ' + s.partOfSpeech : '') +
+      (entry.language ? ' · ' + (entry.language === 'greek' ? 'Greek' : 'Hebrew') : '')));
+    if (s.gloss) wrap.appendChild(h('p', 'cws-gloss', s.gloss));
+    if (s.definition) wrap.appendChild(cwsTextBlock(s.definition.trim(), 'cws-def'));
+  }
+  /* Where this word occurs in the chapter on the left — the
+     whole-Bible concordance list is not something this data
+     source serves, so occurrences are honestly chapter-scoped. */
+  const p = CWS.passage;
+  if (p && entry.id) {
+    try {
+      const data2 = await cwsInterlinear(p);
+      const verses = [];
+      for (const row of (data2.chapter && data2.chapter.content) || []) {
+        if ((row.words || []).some((w) => w.strongs === entry.id)) verses.push(row.verse);
+      }
+      if (verses.length) {
+        const occ = h('p', 'cws-occ');
+        occ.appendChild(document.createTextNode('In ' + CWS_BOOK_NAME[p.book] + ' ' + p.chapter + ': '));
+        verses.forEach((v, i) => {
+          if (i) occ.appendChild(document.createTextNode(', '));
+          const b = h('button', null, 'v. ' + v);
+          b.type = 'button';
+          b.addEventListener('click', () =>
+            cwsSetPassage({ book: p.book, chapter: p.chapter, vStart: v, vEnd: v }));
+          occ.appendChild(b);
+        });
+        wrap.appendChild(occ);
+      }
+    } catch (e) { /* occurrences are a bonus */ }
+  }
+  return wrap;
+}
+
+
+/* ---------- first route ---------- */
+/* ---------- session acquisition (the persistence fix) ----------
+   Three steps, the pattern that fixed the public site (Nov 5):
+   (1) the stored session as-is; (2) an auth-state event carrying a
+   session (the SDK may still be reading storage when step 1 runs);
+   (3) one explicit refresh of the stored refresh token. Only when
+   all three come back empty is anyone shown the sign-in form. */
+async function acquireSession() {
+  const first = await client.auth.getSession();
+  if (first.data && first.data.session && first.data.session.user) return first.data.session;
+  const fromEvent = await new Promise((resolve) => {
+    let done = false;
+    const { data: sub } = client.auth.onAuthStateChange((event, session) => {
+      if (done) return;
+      if (session && session.user) { done = true; try { sub.subscription.unsubscribe(); } catch (e) {} resolve(session); }
+    });
+    setTimeout(() => { if (!done) { done = true; try { sub.subscription.unsubscribe(); } catch (e) {} resolve(null); } }, 2500);
+  });
+  if (fromEvent) return fromEvent;
+  try {
+    const refreshed = await client.auth.refreshSession();
+    if (refreshed.data && refreshed.data.session && refreshed.data.session.user) return refreshed.data.session;
+  } catch (e) { /* no stored session to refresh */ }
+  return null;
+}
+async function recoverSession() {
+  const s = await acquireSession();
+  if (s) { S.user = s.user; return true; }
+  return false;
+}
+
+(async () => {
+  applyDoor();
+  const session = await acquireSession();
+  S.bootDone = true;
+  if (session && session.user) {
+    S.user = session.user;
+    loadAccount();
+  } else if (!S.recovery) {
     showView('view-signin');
   }
 })();
