@@ -302,6 +302,57 @@
      ?v= on the script tag is bumped whenever the renderer
      changes, so a just-updated page is never masked by a
      browser's cached copy of the previous renderer. -->
-<script src="/site/youth-site.js?v=3"></script>
+<script>
+/* Self-healing loading watchdog (Thomas, Nov 6, 2026): a visitor
+   must never be left diagnosing a spinner. If this page has not
+   settled into its content — or one of its plain graceful
+   states — within a few seconds, for ANY reason (a stalled
+   fetch, a browser holding a mixed old/new copy of the page, a
+   fault in the renderer), reload ONCE asking for everything
+   fresh. If it still has not settled after that, the loading
+   card becomes plain words and a Try again button. The renderer
+   calls window.__yySettled() the moment any finished view
+   shows; the attempt is remembered for the tab session only,
+   so a healed page never loops and a later visit starts clean. */
+(function () {
+  var KEY = 'yy-heal-tried';
+  function tried() { try { return sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
+  function mark() { try { sessionStorage.setItem(KEY, '1'); } catch (e) { /* storage off: the reload still helps */ } }
+  function clear() { try { sessionStorage.removeItem(KEY); } catch (e) {} }
+  function freshUrl() {
+    var sep = window.location.search ? '&' : '?';
+    return window.location.pathname + window.location.search + sep + '_heal=' + Date.now() + window.location.hash;
+  }
+  function goFresh() {
+    try { window.location.replace(freshUrl()); } catch (e) { window.location.href = freshUrl(); }
+  }
+  window.__yySettled = function () {
+    if (window.__yyWatchdog) { clearTimeout(window.__yyWatchdog); window.__yyWatchdog = null; }
+    clear();
+  };
+  window.__yyWatchdog = setTimeout(function () {
+    if (!tried()) { mark(); goFresh(); return; }
+    var card = document.querySelector('#view-loading .center-card');
+    if (!card) return;
+    var p = card.querySelector('p');
+    if (p) {
+      p.style.cssText = 'font-weight:800;font-size:19px;color:var(--ink)';
+      p.textContent = 'This page is having trouble loading.';
+    }
+    var q = document.createElement('p');
+    q.style.cssText = 'color:var(--ink-soft);margin:8px 0 0';
+    q.textContent = 'Something got stuck on the way here \u2014 an old saved copy of the page, or a hiccup in the connection.';
+    card.appendChild(q);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn';
+    btn.style.marginTop = '18px';
+    btn.textContent = 'Try again';
+    btn.addEventListener('click', function () { clear(); goFresh(); });
+    card.appendChild(btn);
+  }, 8000);
+})();
+</script>
+<script src="/site/youth-site.js?v=4"></script>
 </body>
 </html>

@@ -66,6 +66,9 @@ function h(tag, className, text) {
   return node;
 }
 function show(id) {
+  // Any finished view — the page itself or a graceful state —
+  // settles the shell's self-healing watchdog.
+  if (window.__yySettled) window.__yySettled();
   for (const v of ['view-loading', 'view-state', 'view-site']) {
     $(v).classList.toggle('hidden', v !== id);
   }
