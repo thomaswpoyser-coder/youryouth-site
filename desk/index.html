@@ -1054,7 +1054,7 @@ const S = {
   groupId: null,
   churchGroupId: null,
   lessons: [], questions: [], events: [], announcements: [], myPrayers: [],
-  cLessons: [], cEditingId: null, cAssistOk: null,
+  cLessons: [], cEditingId: null, cAssistOk: null, cAssistWhy: '',
   settings: null, siteMinistries: [], sitePhotos: [], siteSlug: '', siteBucketOk: null,
   bootDone: false, recovering: false,
   churchAnnouncements: [], churchEvents: [], directory: [],
@@ -1062,6 +1062,7 @@ const S = {
   editingChurchAnnId: null, editingChurchEventId: null,
   readerId: null,            // lesson open in the member reader
   assistOk: null,            // probe result (null = not probed yet)
+  assistWhy: '',             // receipt for a false verdict (status/error)
   recovery: false,           // true while a password-reset link is being answered
 };
 function currentMembership() {
@@ -1340,10 +1341,11 @@ client.auth.onAuthStateChange((event, session) => {
       loadAccount();
     } else {
       /* Same account, a session (re)delivered: an assist probe that
-         ran before the token was usable stays undecided by design —
-         settle it now that a real session exists. */
-      if (S.assistOk === null && isLeaderHere()) probeAssist();
-      if (S.cAssistOk === null && churchIsLeaderHere()) probeChurchAssist();
+         ran before the token was usable stays undecided by design,
+         and a failed verdict is not final either — settle both now
+         that a real session exists. Only a true verdict is cached. */
+      if (S.assistOk !== true && isLeaderHere()) probeAssist();
+      if (S.cAssistOk !== true && churchIsLeaderHere()) probeChurchAssist();
     }
   } else {
     if (event !== 'SIGNED_OUT' && !S.bootDone) {
@@ -1724,8 +1726,30 @@ async function callAssist(payload) {
   try { json = await resp.json(); } catch (e) { /* non-JSON answer */ }
   return { status: resp.status, json };
 }
+/* The receipt for a failed assist verdict: the HTTP status when a
+   response arrived, plus the function's own error word when it
+   sent one — or "network" when the fetch itself threw (callers
+   pass null). Kept on the state so the unavailable message can
+   carry it: a failure nobody can identify is a failure nobody
+   can fix. Shared by both sides of the desk. */
+function assistWhyOf(r) {
+  if (!r) return 'network';
+  const err = r.json && typeof r.json.error === 'string' ? r.json.error : '';
+  return err ? String(r.status) + ' · ' + err : String(r.status);
+}
+function assistProbeLog(side, r, ok) {
+  console.info('sermon assist probe (' + side + '): ' + (ok ? 'available' : 'unavailable') +
+    ' — status ' + (r ? r.status : 'none') +
+    (r && r.json && typeof r.json.error === 'string' ? ', error ' + r.json.error : '') +
+    (r ? '' : ', fetch threw'));
+}
 async function probeAssist() {
-  if (S.assistOk !== null) { renderAssistState(); return; }
+  if (S.assistOk === true) { renderAssistState(); return; }
+  /* Only a true verdict is final. An undecided probe has nothing
+     to report yet, and a FALSE verdict re-probes on the usual
+     triggers (Sermon pane open, same-account auth event, group
+     apply) so a transient failure heals itself instead of
+     sticking for the whole page session. */
   try {
     const r = await callAssist({ kind: 'ping' });
     if (r.noSession || r.status === 401) {
@@ -1739,8 +1763,12 @@ async function probeAssist() {
       return;
     }
     S.assistOk = !!(r.json && r.json.ok === true);
+    S.assistWhy = S.assistOk ? '' : assistWhyOf(r);
+    assistProbeLog('youth', r, S.assistOk);
   } catch (e) {
     S.assistOk = false;
+    S.assistWhy = assistWhyOf(null);
+    assistProbeLog('youth', null, false);
   }
   renderAssistState();
 }
@@ -1748,9 +1776,17 @@ function renderAssistState() {
   const buttons = $('assist-buttons');
   if (S.assistOk === false) {
     buttons.classList.add('hidden');
-    setMsg('assist-msg', 'Sermon assist isn’t available right now. Your text is unchanged.');
+    setMsg('assist-msg', 'Sermon assist isn’t available right now. Your text is unchanged.' +
+      (S.assistWhy ? ' (check ' + S.assistWhy + ')' : ''));
   } else {
     buttons.classList.remove('hidden');
+    /* Follow the newest verdict: if a re-probe healed the assist,
+       the stale failure text goes with the false state. Only the
+       failure text itself is cleared — other assist news (a
+       draft added, a try-again note) is never clobbered. */
+    if ($('assist-msg').textContent.indexOf('isn’t available right now') !== -1) {
+      setMsg('assist-msg', '');
+    }
   }
 }
 /* Scoped to THIS side's box: the merged desk carries a second
@@ -1778,15 +1814,15 @@ $('assist-buttons').querySelectorAll('[data-assist]').forEach((btn) => {
     try {
       const r = await callAssist({ kind: 'sermon', mode, title, passage, notes, series });
       if (r.status === 501 || (r.json && r.json.error === 'not-configured')) {
-        S.assistOk = false; renderAssistState();
-        setMsg('assist-msg', 'Sermon assist isn’t available right now. Your text is unchanged.');
+        S.assistOk = false; S.assistWhy = assistWhyOf(r); renderAssistState();
+        setMsg('assist-msg', 'Sermon assist isn’t available right now. Your text is unchanged. (check ' + S.assistWhy + ')');
         return;
       }
       if (r.noSession || r.status === 401) {
         /* The session was not usable for this call (e.g. it settled
            late): re-probe rather than declaring the assist
            unavailable, and let the leader simply try again. */
-        S.assistOk = null;
+        S.assistOk = null; S.assistWhy = '';
         probeAssist();
         setMsg('assist-msg', 'That didn’t work just now. Your text is unchanged — try again in a moment.', 'err');
         return;
@@ -4015,7 +4051,12 @@ async function callChurchAssist(payload) {
   return { status: resp.status, json };
 }
 async function probeChurchAssist() {
-  if (S.cAssistOk !== null) { renderChurchAssistState(); return; }
+  if (S.cAssistOk === true) { renderChurchAssistState(); return; }
+  /* Only a true verdict is final — the youth twin's rule: an
+     undecided probe has nothing to report yet, and a FALSE
+     verdict re-probes on the usual triggers (Sermon pane open,
+     same-account auth event, group apply) so a transient failure
+     heals itself instead of sticking for the page session. */
   try {
     const r = await callChurchAssist({ kind: 'ping' });
     if (r.noSession || r.status === 401) {
@@ -4029,8 +4070,12 @@ async function probeChurchAssist() {
       return;
     }
     S.cAssistOk = !!(r.json && r.json.ok === true);
+    S.cAssistWhy = S.cAssistOk ? '' : assistWhyOf(r);
+    assistProbeLog('church', r, S.cAssistOk);
   } catch (e) {
     S.cAssistOk = false;
+    S.cAssistWhy = assistWhyOf(null);
+    assistProbeLog('church', null, false);
   }
   renderChurchAssistState();
 }
@@ -4038,9 +4083,17 @@ function renderChurchAssistState() {
   const buttons = $('cassist-buttons');
   if (S.cAssistOk === false) {
     buttons.classList.add('hidden');
-    setMsg('cassist-msg', 'Sermon assist isn’t available right now. Your text is unchanged.');
+    setMsg('cassist-msg', 'Sermon assist isn’t available right now. Your text is unchanged.' +
+      (S.cAssistWhy ? ' (check ' + S.cAssistWhy + ')' : ''));
   } else {
     buttons.classList.remove('hidden');
+    /* Follow the newest verdict: if a re-probe healed the assist,
+       the stale failure text goes with the false state. Only the
+       failure text itself is cleared — other assist news is
+       never clobbered. */
+    if ($('cassist-msg').textContent.indexOf('isn’t available right now') !== -1) {
+      setMsg('cassist-msg', '');
+    }
   }
 }
 /* Scoped to THIS side's box: the merged desk carries a second
@@ -4068,15 +4121,15 @@ $('cassist-buttons').querySelectorAll('[data-assist]').forEach((btn) => {
     try {
       const r = await callChurchAssist({ kind: 'sermon', mode, title, passage, notes, series });
       if (r.status === 501 || (r.json && r.json.error === 'not-configured')) {
-        S.cAssistOk = false; renderChurchAssistState();
-        setMsg('cassist-msg', 'Sermon assist isn’t available right now. Your text is unchanged.');
+        S.cAssistOk = false; S.cAssistWhy = assistWhyOf(r); renderChurchAssistState();
+        setMsg('cassist-msg', 'Sermon assist isn’t available right now. Your text is unchanged. (check ' + S.cAssistWhy + ')');
         return;
       }
       if (r.noSession || r.status === 401) {
         /* The session was not usable for this call (e.g. it settled
            late): re-probe rather than declaring the assist
            unavailable, and let the leader simply try again. */
-        S.cAssistOk = null;
+        S.cAssistOk = null; S.cAssistWhy = '';
         probeChurchAssist();
         setMsg('cassist-msg', 'That didn’t work just now. Your text is unchanged — try again in a moment.', 'err');
         return;
