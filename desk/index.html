@@ -61,6 +61,11 @@
   .tabs button{background:#fff;border:1px solid var(--line);color:var(--green);
     border-radius:999px;padding:8px 18px;font:inherit;font-weight:600;cursor:pointer}
   .tabs button.active{background:var(--green);color:#fff;border-color:var(--green)}
+  /* Sermon preparation sits apart: pushed to the far right of the
+     row with the platform gold, so the workstation reads as its own
+     place, not one more desk tab (founder's brief, Nov 6, 2026). */
+  .tabs button.sermon{margin-left:auto;background:var(--soft);border-color:var(--gold);color:var(--green-deep)}
+  .tabs button.sermon.active{background:var(--green);color:#fff;border-color:var(--green)}
   .sidetoggle{display:inline-flex;background:#fff;border:1px solid var(--line);
     border-radius:999px;padding:3px;margin:0 0 18px}
   .sidetoggle button{background:transparent;border:none;color:var(--green);
@@ -293,14 +298,14 @@
     <!-- ============ LEADER DESK ============ -->
     <div id="desk" class="hidden">
       <div class="tabs" role="tablist">
-        <button type="button" id="tab-lessons" class="active">Lessons</button>
+        <button type="button" id="tab-announcements" class="active">Announcements</button>
         <button type="button" id="tab-questions">Questions</button>
         <button type="button" id="tab-events">Events</button>
-        <button type="button" id="tab-announcements">Announcements</button>
+        <button type="button" id="tab-lessons" class="sermon">Sermon preparation</button>
       </div>
 
-      <!-- Lessons -->
-      <section id="pane-lessons">
+      <!-- Sermon preparation (the lesson workstation) -->
+      <section id="pane-lessons" class="hidden">
         <div class="ws-grid" id="ws-grid">
       <!-- left rail: the passage and its cross-references -->
       <aside class="ws-rail" id="ws-left" aria-label="Bible and cross-references">
@@ -465,7 +470,7 @@
       </section>
 
       <!-- Announcements -->
-      <section id="pane-announcements" class="hidden">
+      <section id="pane-announcements">
         <div class="card">
           <h2 style="margin:0 0 4px;font-size:21px;color:var(--green)">Post an announcement</h2>
           <form id="ann-form">
@@ -850,6 +855,45 @@ function syncFavicon() {
   setFavicon(url ? url : PLATFORM_FAVICON);
 }
 
+/* ---------- desk branding ----------
+   The desk wears the ACTIVE group's own colours (founder's brief,
+   Nov 6, 2026): flipping the Youth | Church toggle re-skins the
+   whole page, the way flipping between the apps does — SoulFire's
+   dark teal on the Youth side, the church's own palette on the
+   Church side. Signed out, or a group with no brand on record, the
+   desk keeps the platform look. The palette is the same one the
+   app stores on the group row (groups.brand), so web and app can
+   never drift apart. */
+const DESK_BRAND_VARS = ['--cream', '--card', '--ink', '--muted', '--green', '--green-deep', '--gold', '--line', '--soft'];
+function applyDeskBrand() {
+  const root = document.documentElement;
+  let brand = null;
+  if (S.side === 'church') {
+    const m = S.churchMemberships.find((x) => x.group.id === S.churchGroupId);
+    brand = m && m.group.brand;
+  } else {
+    const m = currentMembership();
+    brand = m && m.group.brand;
+  }
+  const p = brand && brand.palette;
+  if (!p || typeof p.background !== 'string') {
+    for (const v of DESK_BRAND_VARS) root.style.removeProperty(v);
+    root.style.removeProperty('color-scheme');
+    return;
+  }
+  const dark = brand.mode === 'dark';
+  root.style.setProperty('--cream', p.background);
+  root.style.setProperty('--card', p.surface);
+  root.style.setProperty('--ink', p.text);
+  root.style.setProperty('--muted', p.muted);
+  root.style.setProperty('--green', p.brand);
+  root.style.setProperty('--green-deep', p.deep);
+  root.style.setProperty('--gold', p.accent);
+  root.style.setProperty('--soft', p.deep);
+  root.style.setProperty('--line', dark ? 'rgba(255,255,255,0.16)' : 'rgba(23,32,43,0.14)');
+  root.style.setProperty('color-scheme', dark ? 'dark' : 'light');
+}
+
 /* ---------- auth ---------- */
 $('signin-form').addEventListener('submit', async (ev) => {
   ev.preventDefault();
@@ -928,6 +972,10 @@ $('newpw-form').addEventListener('submit', async (ev) => {
 });
 async function signOut() {
   await client.auth.signOut();
+  // The platform look returns with the sign-in screen.
+  S.memberships = [];
+  S.churchMemberships = [];
+  applyDeskBrand();
 }
 $('signout').addEventListener('click', signOut);
 $('nogroup-signout').addEventListener('click', signOut);
@@ -1046,10 +1094,10 @@ async function loadAccount() {
   // giving card (the group's giving link lives there). The retry
   // below drops whichever column the error names — the same
   // treatment kind and created_by have always had.
-  let grpCols = ['id', 'name', 'join_code', 'kind', 'created_by', 'logo_url', 'settings'];
+  let grpCols = ['id', 'name', 'join_code', 'kind', 'created_by', 'logo_url', 'settings', 'brand'];
   let grp = await client.from('groups').select(grpCols.join(', ')).in('id', ids);
   while (grp.error) {
-    const missing = ['settings', 'logo_url', 'created_by', 'kind']
+    const missing = ['brand', 'settings', 'logo_url', 'created_by', 'kind']
       .find((c) => grpCols.includes(c) && grp.error.message.includes(c));
     if (!missing) break;
     grpCols = grpCols.filter((c) => c !== missing);
@@ -1152,6 +1200,7 @@ function setSide(side, remember) {
     $('youth-main').classList.add('hidden');
   }
   syncFavicon();
+  applyDeskBrand();
   wsSyncWidth();
 }
 $('side-youth').addEventListener('click', () => setSide('youth'));
@@ -1161,6 +1210,7 @@ function applyGroup() {
   const m = currentMembership();
   if (!m) return;
   syncFavicon();
+  applyDeskBrand();
   $('group-code').textContent = m.group.join_code || '';
   $('group-role').textContent = m.role === 'leader' ? 'Leader' : (m.role === 'parent' ? 'Parent' : 'Member');
   const pending = pendingApproval();
@@ -2586,6 +2636,7 @@ function applyChurchGroup() {
   const m = churchCurrentMembership();
   if (!m) return;
   syncFavicon();
+  applyDeskBrand();
   $('cgroup-code').textContent = m.group.join_code || '';
   let role = roleLabel(m.role);
   if (m.group.created_by && S.user && m.group.created_by === S.user.id) role += ' · you set this church up';
