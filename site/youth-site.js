@@ -164,9 +164,11 @@ function render(data) {
     img.addEventListener('error', () => img.classList.add('hidden'));
   }
 
-  // hero — the group's name and mark; its meeting time and
-  // place ride underneath ONLY when the leader published them
-  // (the function omits the fields otherwise).
+  // hero — the group's name and mark; the meeting time's first
+  // line rides underneath ONLY when the leader published it
+  // (the function omits the fields otherwise). The address is
+  // NOT repeated here: it lives once, in the When & where card
+  // below, with the directions button (Thomas, Nov 6).
   $('site-name').textContent = data.name;
   const lockup = $('hero-lockup'), lockImg = $('hero-logo');
   lockup.classList.toggle('hidden', !data.logoUrl);
@@ -178,15 +180,11 @@ function render(data) {
   const mainTime = firstLine(data.serviceTimes);
   $('hero-time').textContent = mainTime;
   $('hero-time').classList.toggle('hidden', !mainTime);
-  const placeLine = firstLine(data.address);
-  $('hero-place').textContent = placeLine;
-  $('hero-place').classList.toggle('hidden', !placeLine);
 
   // when & where — renders when either part was published;
   // each part shows only if it was published itself.
   const meetShown = !!(data.serviceTimes || data.address);
   $('meet').classList.toggle('hidden', !meetShown || PAGE.editing);
-  $('hero-meet').classList.toggle('hidden', !meetShown);
   if (data.serviceTimes) {
     $('meet-times').textContent = data.serviceTimes;
     $('meet-times').classList.remove('hidden');
@@ -542,7 +540,6 @@ function enterEdit() {
   $('meet').classList.remove('hidden');
   $('meet-view').classList.add('hidden');
   $('meet-edit').classList.remove('hidden');
-  $('hero-meet').classList.add('hidden');
   // welcome: the form replaces the band.
   $('ed-welcome').value = typeof site.welcome === 'string' ? site.welcome : '';
   $('tg-welcome').checked = site.showWelcome === true;
