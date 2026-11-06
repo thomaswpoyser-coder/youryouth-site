@@ -474,7 +474,7 @@
             <input type="text" id="ys-place" maxlength="200" placeholder="e.g. Centreville Baptist Church, 870 Murray Dr">
             <label style="font-weight:400"><input type="checkbox" id="ys-show-place" style="width:auto"> Show where you meet</label>
             <label style="font-weight:400"><input type="checkbox" id="ys-show-events" style="width:auto"> Show upcoming events</label>
-            <label for="ys-slug">Your page address (youryouth.org/site/?s=…)</label>
+            <label for="ys-slug">Your page address (youryouth.org/&lt;address&gt;)</label>
             <div style="display:flex;gap:8px;align-items:center">
               <input type="text" id="ys-slug" maxlength="40" placeholder="e.g. soulfireyouth" style="flex:1">
               <button class="btn secondary" type="button" id="ys-claim">Claim</button>
@@ -3314,7 +3314,12 @@ function loadYouthSite() {
      resolve against whichever door the leader entered through —
      landing the youth link on the church site shell (or vice versa),
      which cannot resolve the other product's code or slug. */
-  $('ys-view').href = 'https://youryouth.org/site/?c=' + encodeURIComponent(m.group.join_code || '');
+  /* With an address claimed, the link wears the pretty form —
+     youryouth.org/<slug>; the ?c= link is the fallback while no
+     address is claimed (the ?s= form still works, unpresented). */
+  $('ys-view').href = (typeof site.slug === 'string' && site.slug)
+    ? 'https://youryouth.org/' + encodeURIComponent(site.slug)
+    : 'https://youryouth.org/site/?c=' + encodeURIComponent(m.group.join_code || '');
   setMsg('ys-msg', '');
 }
 $('ys-form').addEventListener('submit', async (e) => {
@@ -3375,8 +3380,8 @@ $('ys-claim').addEventListener('click', async () => {
   const { error } = await client.from('groups').update({ settings }).eq('id', m.group.id);
   if (error) { setMsg('ys-msg', 'Could not claim it: ' + error.message, 'err'); return; }
   m.group.settings = settings;
-  $('ys-view').href = 'https://youryouth.org/site/?s=' + encodeURIComponent(want);
-  setMsg('ys-msg', 'Claimed: youryouth.org/site/?s=' + want, 'ok');
+  $('ys-view').href = 'https://youryouth.org/' + encodeURIComponent(want);
+  setMsg('ys-msg', 'Claimed: youryouth.org/' + want, 'ok');
 });
 
 /* ================= YOUR CHURCH SITE ================= */
