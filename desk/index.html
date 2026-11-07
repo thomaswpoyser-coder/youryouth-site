@@ -72,6 +72,15 @@
   .sidetoggle button{background:transparent;border:none;color:var(--accent-text);
     border-radius:999px;padding:7px 22px;font:inherit;font-weight:600;cursor:pointer}
   .sidetoggle button.active{background:var(--green);color:#fff}
+  /* Social panes: the sub-tab rows reuse .sidetoggle; the chat
+     lines and the held block get their own light styles. */
+  .chatmsg{padding:9px 0;border-bottom:1px solid var(--line)}
+  .chatmsg:last-child{border-bottom:none}
+  .chatmsg .who{font-weight:700;font-size:14.5px}
+  .chatmsg .when{color:var(--muted);font-size:12.5px;font-weight:400;margin-left:8px}
+  .chatmsg .txt{margin-top:2px;white-space:pre-wrap;overflow-wrap:break-word}
+  .chatheld{background:var(--soft);border:1px solid var(--gold);border-radius:12px;padding:4px 14px 10px;margin:0 0 14px}
+  .welcomeline{text-align:center;color:var(--muted);font-size:13.5px;padding:8px 0;border-bottom:1px solid var(--line)}
   .person{display:flex;gap:14px;align-items:flex-start}
   .avatar{width:52px;height:52px;border-radius:50%;flex:none;background:var(--soft);
     color:var(--accent-text);font-family:Georgia,serif;font-size:21px;line-height:52px;text-align:center;overflow:hidden}
@@ -324,7 +333,7 @@
     <div id="desk" class="hidden">
       <div class="tabs" role="tablist">
         <button type="button" id="tab-announcements" class="active">Announcements</button>
-        <button type="button" id="tab-questions">Questions</button>
+        <button type="button" id="tab-social">Social</button>
         <button type="button" id="tab-events">Events</button>
         <button type="button" id="tab-youthsite">Your youth site</button>
         <button type="button" id="tab-lessons" class="sermon">Sermon preparation</button>
@@ -490,15 +499,54 @@
         </div>
       </section>
 
-      <!-- Questions -->
-      <section id="pane-questions" class="hidden">
-        <div class="card">
-          <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Questions — leaders see who asked</h2>
-          <p class="hint" style="margin:0">Students see these questions without any name. Only leaders see who asked.</p>
-          <p class="hint" style="margin:6px 0 0">A question marked held for review is not shown to the group. You release it, or keep it held, from the Safety queue in the app.</p>
-          <p class="msg" id="questions-msg"></p>
-          <div id="question-list" style="margin-top:14px"></div>
+      <!-- Social: the group's life with its leaders — prayer
+           requests, questions and the group chat under one tab
+           with sub-tabs (founder's ruling, Nov 7, 2026: the social
+           side is the heart of the tool, and leaders work it from
+           phone or PC alike). -->
+      <section id="pane-social" class="hidden">
+        <div class="sidetoggle" role="tablist" aria-label="Social">
+          <button type="button" id="stab-prayers" class="active">Prayers</button>
+          <button type="button" id="stab-questions">Questions</button>
+          <button type="button" id="stab-chats">Chats</button>
         </div>
+
+        <section id="spane-prayers">
+          <div class="card">
+            <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Prayer requests — leaders only</h2>
+            <p class="hint" style="margin:0">These never go to the group. Only leaders see them.</p>
+            <p class="msg" id="prayers-msg"></p>
+            <div id="prayer-list" style="margin-top:14px"></div>
+          </div>
+        </section>
+
+        <section id="spane-questions" class="hidden">
+          <div class="card">
+            <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Questions — leaders see who asked</h2>
+            <p class="hint" style="margin:0">Students see these questions without any name. Only leaders see who asked.</p>
+            <p class="hint" style="margin:6px 0 0">A question marked held for review is not shown to the group. You release it, or keep it held, from the Safety queue in the app.</p>
+            <p class="msg" id="questions-msg"></p>
+            <div id="question-list" style="margin-top:14px"></div>
+          </div>
+        </section>
+
+        <section id="spane-chats" class="hidden">
+          <div class="card">
+            <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Group chat</h2>
+            <p class="hint" style="margin:0">The group's one big chat, as it is in the app. Messages held by safety screening are listed separately, visible only to leaders — you release them, or keep them held, from the Safety queue in the app.</p>
+            <p class="msg" id="chat-msg"></p>
+            <div id="chat-held" style="margin-top:14px"></div>
+            <div id="chat-list"></div>
+            <form id="chat-form" style="margin-top:14px">
+              <label for="chat-body">Message the group</label>
+              <textarea id="chat-body" rows="3" placeholder="Write to the group…"></textarea>
+              <div class="btnrow">
+                <button class="btn" type="submit">Send</button>
+              </div>
+              <p class="msg" id="chat-send-msg"></p>
+            </form>
+          </div>
+        </section>
       </section>
 
       <!-- Events -->
@@ -669,6 +717,7 @@
         <button type="button" id="ctab-announcements" class="active">Announcements</button>
         <button type="button" id="ctab-events">Calendar</button>
         <button type="button" id="ctab-directory">Directory</button>
+        <button type="button" id="ctab-social">Social</button>
         <button type="button" id="ctab-site">Your church site</button>
         <button type="button" id="ctab-lessons" class="sermon">Sermon preparation</button>
       </div>
@@ -728,6 +777,62 @@
         <input type="text" id="cdir-search" placeholder="Search by name" style="margin-bottom:16px">
         <p class="msg" id="cdir-msg"></p>
         <div id="cdir-list"></div>
+      </section>
+
+      <!-- Church Social (leaders only): prayer requests and
+           questions for the leaders, and the leader's OWN direct
+           messages. Members' direct interaction stays in the app —
+           nothing member-facing is added here, and no leader can
+           see a conversation they are not part of: the dm_*
+           policies only ever hand a participant their own threads. -->
+      <section id="cpane-social" class="hidden">
+        <div class="sidetoggle" role="tablist" aria-label="Social">
+          <button type="button" id="cstab-prayers" class="active">Prayers</button>
+          <button type="button" id="cstab-questions">Questions</button>
+          <button type="button" id="cstab-chats">Chats</button>
+        </div>
+
+        <section id="cspane-prayers">
+          <div class="card">
+            <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Prayer requests — leaders only</h2>
+            <p class="hint" style="margin:0">Every request sent to this church's leaders, including the ones their sender kept private. Only leaders see them.</p>
+            <p class="msg" id="cprayers-msg"></p>
+            <div id="cprayer-list" style="margin-top:14px"></div>
+          </div>
+        </section>
+
+        <section id="cspane-questions" class="hidden">
+          <div class="card">
+            <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Questions — leaders see who asked</h2>
+            <p class="hint" style="margin:0">Members see these questions without a name unless the asker chose to give theirs. Only leaders always see who asked.</p>
+            <p class="hint" style="margin:6px 0 0">A question marked held for review is not shown to the group. You release it, or keep it held, from the Safety queue in the app.</p>
+            <p class="msg" id="cquestions-msg"></p>
+            <div id="cquestion-list" style="margin-top:14px"></div>
+          </div>
+        </section>
+
+        <section id="cspane-chats" class="hidden">
+          <div class="card">
+            <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Your messages</h2>
+            <p class="hint" style="margin:0">Your own direct-message conversations — only yours. Nobody can read a conversation they are not part of, leaders included.</p>
+            <p class="msg" id="cdm-msg"></p>
+            <div id="cdm-list" style="margin-top:14px"></div>
+            <div id="cdm-thread" class="hidden" style="margin-top:14px">
+              <button class="backlink" id="cdm-back" type="button">Back to conversations</button>
+              <h3 id="cdm-title" style="margin:2px 0 10px;font-size:19px;color:var(--accent-text)"></h3>
+              <button class="btn secondary small hidden" type="button" id="cdm-earlier">Show earlier messages</button>
+              <div id="cdm-messages"></div>
+              <form id="cdm-form" style="margin-top:14px">
+                <label for="cdm-body">Reply</label>
+                <textarea id="cdm-body" rows="3" placeholder="Write your reply…"></textarea>
+                <div class="btnrow">
+                  <button class="btn" type="submit">Send</button>
+                </div>
+                <p class="msg" id="cdm-send-msg"></p>
+              </form>
+            </div>
+          </div>
+        </section>
       </section>
 <section id="cpane-site" class="hidden">
       <div class="card">
@@ -1054,10 +1159,13 @@ const S = {
   groupId: null,
   churchGroupId: null,
   lessons: [], questions: [], events: [], announcements: [], myPrayers: [],
+  prayers: [], chatMessages: [], chatHeldFlags: [], socialTab: 'prayers',
   cLessons: [], cEditingId: null, cAssistOk: null, cAssistWhy: '',
   settings: null, siteMinistries: [], sitePhotos: [], siteSlug: '', siteBucketOk: null,
   bootDone: false, recovering: false,
   churchAnnouncements: [], churchEvents: [], directory: [],
+  cQuestions: [], cPrayers: [], cSocialTab: 'prayers',
+  dmThreads: [], dmActiveId: null, dmOtherName: '', dmMessages: [], dmHasEarlier: false,
   editingId: null,           // lesson open in the editor (null = new)
   editingChurchAnnId: null, editingChurchEventId: null,
   readerId: null,            // lesson open in the member reader
@@ -1572,6 +1680,8 @@ function applyGroup() {
     resetEditor();
     loadLessons();
     loadQuestions();
+    loadLeaderPrayers();
+    if (!$('pane-social').classList.contains('hidden') && S.socialTab === 'chats') loadGroupChat();
     loadEvents(true);
     loadAnnouncements(true);
     probeAssist();
@@ -2074,6 +2184,275 @@ function answerForm(q, editing) {
   return wrap;
 }
 
+/* ================= LEADER: social (prayers + group chat) ======
+   The Social tab's other two sub-panes — the Questions queue
+   above renders into this tab unchanged. Prayers mirrors the
+   app's leader prayer queue (src/lib/questions.tsx +
+   PrayerQueuePanel): leaders read the prayer_requests TABLE for
+   their group, mark a request seen ("Mark as prayed for") and
+   delete one; deleting resolves any open safety flag first, the
+   app's own order, so the Safety queue never keeps a ghost. The
+   group chat mirrors src/lib/chat.tsx: the chat read policy
+   hands leaders every message in their group, held ones
+   included; held messages are listed separately with their
+   flag's reason, and releasing them stays in the app's Safety
+   queue, exactly like held questions here. Sending runs the same
+   on-device screening the rest of this page uses, and a leader
+   may delete any message in the group (migration 010) — no more
+   power than the app gives. ------------------------------------ */
+function selectSocialTab(name) {
+  S.socialTab = name;
+  for (const t of ['prayers', 'questions', 'chats']) {
+    $('stab-' + t).classList.toggle('active', t === name);
+    $('spane-' + t).classList.toggle('hidden', t !== name);
+  }
+  if (name === 'prayers') loadLeaderPrayers();
+  if (name === 'questions') loadQuestions();
+  if (name === 'chats') loadGroupChat();
+}
+$('stab-prayers').addEventListener('click', () => selectSocialTab('prayers'));
+$('stab-questions').addEventListener('click', () => selectSocialTab('questions'));
+$('stab-chats').addEventListener('click', () => selectSocialTab('chats'));
+
+/* Names for a set of author ids, through profiles_public —
+   the same lookup the app makes. Values are {name, role}. */
+async function resolveNames(ids) {
+  const names = new Map();
+  const wanted = [...new Set(ids.filter(Boolean))];
+  if (wanted.length === 0) return names;
+  const { data } = await client.from('profiles_public').select('id, display_name, role').in('id', wanted);
+  for (const p of data || []) names.set(p.id, { name: p.display_name || 'Member', role: p.role || 'member' });
+  return names;
+}
+
+/* One leader prayer card, shared by both sides of the desk: the
+   app's queue card (author, held marker, body, seen line) with
+   its two actions. onChanged reloads the side's list; onFail
+   reports into the side's message line. */
+function leaderPrayerCard(p, onChanged, onFail) {
+  const card = h('div', 'staticitem');
+  card.appendChild(h('div', 't', p.authorName + (p.heldForReview ? ' — held for review' : '')));
+  const body = h('div', 'bodytext', p.body);
+  body.style.marginTop = '4px';
+  card.appendChild(body);
+  card.appendChild(h('div', 's', fmtWhen(p.createdAt) + ' · ' + (p.seenByLeader ? 'Seen ✓' : 'Not seen yet')));
+  const row = h('div', 'row-actions');
+  if (!p.seenByLeader && !p.heldForReview) {
+    const mark = h('button', 'btn secondary small', 'Mark as prayed for');
+    mark.type = 'button';
+    mark.addEventListener('click', async () => {
+      mark.disabled = true;
+      const { error } = await client.from('prayer_requests').update({ seen_by_leader: true }).eq('id', p.id);
+      if (error) { mark.disabled = false; onFail('That could not be saved. Check your connection and try again.'); return; }
+      onChanged();
+    });
+    row.appendChild(mark);
+  }
+  const del = h('button', 'btn danger small', 'Delete');
+  del.type = 'button';
+  del.addEventListener('click', async () => {
+    if (!window.confirm('Delete this prayer request?')) return;
+    await client.from('safety_flags').update({ status: 'resolved' })
+      .eq('source', 'prayer').eq('source_id', p.id).eq('status', 'open');
+    const { error } = await client.from('prayer_requests').delete().eq('id', p.id);
+    if (error) { onFail('That prayer request could not be deleted. Check your connection and try again.'); return; }
+    onChanged();
+  });
+  row.appendChild(del);
+  card.appendChild(row);
+  return card;
+}
+
+/* ---------- social: prayer requests (leader queue) ---------- */
+async function loadLeaderPrayers() {
+  setMsg('prayers-msg', 'Loading prayer requests…');
+  const { data, error } = await client
+    .from('prayer_requests')
+    .select('*')
+    .eq('group_id', S.groupId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) {
+    S.prayers = [];
+    renderLeaderPrayers();
+    setMsg('prayers-msg', 'Prayer requests could not load. Check your connection and try again.', 'err');
+    return;
+  }
+  const rows = data || [];
+  const names = await resolveNames(rows.map((r) => r.author_id));
+  S.prayers = rows.map((r) => ({
+    id: r.id,
+    body: r.body || '',
+    createdAt: r.created_at,
+    authorName: (names.get(r.author_id) || {}).name || 'Member',
+    seenByLeader: r.seen_by_leader === true,
+    heldForReview: r.held_for_review === true,
+  }));
+  setMsg('prayers-msg', '');
+  renderLeaderPrayers();
+}
+function renderLeaderPrayers() {
+  const box = $('prayer-list');
+  box.replaceChildren();
+  if (S.prayers.length === 0) {
+    box.appendChild(h('p', 'muted', 'No prayer requests yet.'));
+    return;
+  }
+  for (const p of S.prayers) {
+    box.appendChild(leaderPrayerCard(p, loadLeaderPrayers, (t) => setMsg('prayers-msg', t, 'err')));
+  }
+}
+
+/* ---------- social: the group chat ---------- */
+async function loadGroupChat() {
+  setMsg('chat-msg', 'Loading the chat…');
+  const { data, error } = await client
+    .from('chat_messages')
+    .select('*')
+    .eq('group_id', S.groupId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) {
+    S.chatMessages = [];
+    S.chatHeldFlags = [];
+    renderGroupChat();
+    setMsg('chat-msg', 'The chat could not load. Check your connection and try again.', 'err');
+    return;
+  }
+  // The latest page, flipped back to reading order — the same
+  // window shape the app's DM history uses.
+  const rows = (data || []).slice().reverse();
+  const flags = await client
+    .from('safety_flags')
+    .select('*')
+    .eq('group_id', S.groupId)
+    .eq('source', 'chat')
+    .eq('status', 'open')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  S.chatHeldFlags = flags.data || [];
+  const names = await resolveNames(
+    rows.filter((r) => r.kind !== 'welcome' && r.author_id).map((r) => r.author_id),
+  );
+  S.chatMessages = rows.map((r) => {
+    if (r.kind === 'welcome') {
+      // A system line written by the database (migration 016):
+      // no author; the name it carries is the person welcomed.
+      const meta = r.meta && typeof r.meta === 'object' ? r.meta : {};
+      return {
+        id: r.id, kind: 'welcome', body: r.body || '', createdAt: r.created_at,
+        authorName: meta.display_name || 'Member', heldForReview: false,
+      };
+    }
+    const who = names.get(r.author_id) || {};
+    return {
+      id: r.id, kind: 'message', body: r.body || '', createdAt: r.created_at,
+      authorId: r.author_id, authorName: who.name || 'Member',
+      authorRole: who.role || 'student', heldForReview: r.held_for_review === true,
+    };
+  });
+  setMsg('chat-msg', '');
+  renderGroupChat();
+}
+function renderGroupChat() {
+  const heldBox = $('chat-held');
+  heldBox.replaceChildren();
+  const held = S.chatMessages.filter((m) => m.heldForReview);
+  if (held.length > 0) {
+    const wrap = h('div', 'chatheld');
+    const head = h('div', null, 'Held for review — only leaders can see these');
+    head.style.fontWeight = '700';
+    head.style.margin = '8px 0 2px';
+    wrap.appendChild(head);
+    for (const m of held) wrap.appendChild(chatMessageRow(m, true));
+    heldBox.appendChild(wrap);
+  }
+  const box = $('chat-list');
+  box.replaceChildren();
+  const visible = S.chatMessages.filter((m) => !m.heldForReview);
+  if (visible.length === 0) {
+    box.appendChild(h('p', 'muted', 'No messages yet.'));
+    return;
+  }
+  for (const m of visible) box.appendChild(chatMessageRow(m, false));
+}
+function chatMessageRow(m, held) {
+  if (m.kind === 'welcome') return h('div', 'welcomeline', m.body);
+  const row = h('div', 'chatmsg');
+  const head = h('div');
+  head.appendChild(h('span', 'who', m.authorName));
+  head.appendChild(h('span', 'when', fmtWhen(m.createdAt)));
+  row.appendChild(head);
+  if (held) {
+    const flag = S.chatHeldFlags.find((f) => f.source_id === m.id);
+    if (flag) row.appendChild(h('div', 's', 'Held: ' + flag.reason));
+    else row.appendChild(h('div', 's', 'Held for review'));
+  }
+  row.appendChild(h('div', 'txt', m.body));
+  const actions = h('div', 'row-actions');
+  const del = h('button', 'btn danger small', 'Delete');
+  del.type = 'button';
+  del.addEventListener('click', () => deleteChatMessage(m));
+  actions.appendChild(del);
+  row.appendChild(actions);
+  return row;
+}
+async function deleteChatMessage(m) {
+  if (!window.confirm('Delete this message for the whole group?')) return;
+  // Resolve any open flag pointing at the message first, so the
+  // Safety queue never keeps a ghost (the app's delete order for
+  // questions and prayers).
+  await client.from('safety_flags').update({ status: 'resolved' })
+    .eq('source', 'chat').eq('source_id', m.id).eq('status', 'open');
+  const { error } = await client.from('chat_messages').delete().eq('id', m.id).eq('group_id', S.groupId);
+  if (error) {
+    setMsg('chat-msg', 'That message could not be deleted. Check your connection and try again.', 'err');
+    return;
+  }
+  loadGroupChat();
+}
+$('chat-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const text = $('chat-body').value.trim();
+  if (!text) { setMsg('chat-send-msg', 'Write a message first.', 'err'); return; }
+  // The app's send path (chat.tsx): screen on this device first;
+  // a held message is stored already flagged, with a safety_flags
+  // row so leaders can find it in the Safety queue.
+  const screen = screenMessage(text);
+  const { data, error } = await client
+    .from('chat_messages')
+    .insert({ group_id: S.groupId, author_id: S.user.id, body: text, held_for_review: screen.held })
+    .select('*')
+    .single();
+  if (error || !data) {
+    setMsg('chat-send-msg', 'That message did not send. Check your connection and try again.', 'err');
+    return;
+  }
+  if (screen.held) {
+    const flag = await client.from('safety_flags').insert({
+      group_id: S.groupId,
+      source: 'chat',
+      source_id: data.id,
+      reason: screen.reason,
+      priority: screen.priority,
+      status: 'open',
+    });
+    if (flag.error) {
+      // A held message with no flag would be invisible to leaders
+      // forever (the app's Oct 28 audit) — remove it instead.
+      await client.from('chat_messages').delete().eq('id', data.id);
+      setMsg('chat-send-msg', 'That message could not be sent safely. Check your connection and try again.', 'err');
+      return;
+    }
+    $('chat-body').value = '';
+    setMsg('chat-send-msg', 'Held for a leader to review — other students will not see it.', 'ok');
+  } else {
+    $('chat-body').value = '';
+    setMsg('chat-send-msg', 'Sent to the group.', 'ok');
+  }
+  loadGroupChat();
+});
+
 /* ================= LEADER: events ================= */
 function startOfToday() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
 async function fetchEvents() {
@@ -2193,7 +2572,7 @@ $('ann-form').addEventListener('submit', async (ev) => {
 
 /* ---------- desk tabs ---------- */
 function selectTab(name) {
-  for (const t of ['lessons', 'questions', 'events', 'announcements', 'youthsite']) {
+  for (const t of ['lessons', 'social', 'events', 'announcements', 'youthsite']) {
     $('tab-' + t).classList.toggle('active', t === name);
     $('pane-' + t).classList.toggle('hidden', t !== name);
   }
@@ -2201,10 +2580,11 @@ function selectTab(name) {
   // width of the window. Every other tab keeps the desk's measure.
   wsSyncWidth();
   if (name === 'lessons') { wsMaybeInit(); probeAssist(); }
+  if (name === 'social') selectSocialTab(S.socialTab);
   if (name === 'youthsite') loadYouthSite();
 }
 $('tab-lessons').addEventListener('click', () => selectTab('lessons'));
-$('tab-questions').addEventListener('click', () => selectTab('questions'));
+$('tab-social').addEventListener('click', () => selectTab('social'));
 $('tab-events').addEventListener('click', () => selectTab('events'));
 $('tab-announcements').addEventListener('click', () => selectTab('announcements'));
 $('tab-youthsite').addEventListener('click', () => selectTab('youthsite'));
@@ -3123,7 +3503,10 @@ function applyChurchGroup() {
   applyDeskBrand();
   renderHeaderLogo();
   $('ctab-site').classList.toggle('hidden', !churchIsLeaderHere());
+  $('ctab-social').classList.toggle('hidden', !churchIsLeaderHere());
   $('ctab-lessons').classList.toggle('hidden', !churchIsLeaderHere());
+  if (!churchIsLeaderHere() && $('ctab-social').classList.contains('active')) selectChurchTab('announcements');
+  if (churchIsLeaderHere() && $('ctab-social').classList.contains('active')) selectChurchSocialTab(S.cSocialTab);
   if (churchIsLeaderHere()) { resetChurchEditor(); loadChurchSermons(); probeChurchAssist(); }
   $('cgroup-code').textContent = m.group.join_code || '';
   let role = roleLabel(m.role);
@@ -3139,20 +3522,411 @@ function applyChurchGroup() {
 
 /* ---------- church desk tabs ---------- */
 function selectChurchTab(name) {
-  if ((name === 'site' || name === 'lessons') && !churchIsLeaderHere()) name = 'announcements';
-  for (const t of ['announcements', 'events', 'directory', 'site', 'lessons']) {
+  if ((name === 'site' || name === 'lessons' || name === 'social') && !churchIsLeaderHere()) name = 'announcements';
+  for (const t of ['announcements', 'events', 'directory', 'social', 'site', 'lessons']) {
     $('ctab-' + t).classList.toggle('active', t === name);
     $('cpane-' + t).classList.toggle('hidden', t !== name);
   }
   if (name === 'site') loadSiteSettings();
+  if (name === 'social') selectChurchSocialTab(S.cSocialTab);
   if (name === 'lessons') { loadChurchSermons(); cwsMaybeInit(); probeChurchAssist(); }
   wsSyncWidth();
 }
 $('ctab-announcements').addEventListener('click', () => selectChurchTab('announcements'));
 $('ctab-events').addEventListener('click', () => selectChurchTab('events'));
 $('ctab-directory').addEventListener('click', () => selectChurchTab('directory'));
+$('ctab-social').addEventListener('click', () => selectChurchTab('social'));
 $('ctab-site').addEventListener('click', () => selectChurchTab('site'));
 $('ctab-lessons').addEventListener('click', () => selectChurchTab('lessons'));
+
+/* ---------- church social (leaders only) ----------
+   The Social tab on the church side. Questions and prayers are
+   the same leader queues the app's Studio works (people
+   src/lib/questions.tsx): leaders read the TABLES, so they
+   always see who asked, and private prayer requests are
+   included (P9 — leaders see all). Chats is the leader's OWN
+   direct messages: the dm_* policies (migration 020) only ever
+   hand a participant their own conversations, and every query
+   below is built on the signed-in leader's participant pair, so
+   this pane cannot surface a thread the leader is not part of.
+   Members' direct interaction stays in the app (founder's
+   ruling, Nov 7, 2026). --------------------------------------- */
+function selectChurchSocialTab(name) {
+  S.cSocialTab = name;
+  for (const t of ['prayers', 'questions', 'chats']) {
+    $('cstab-' + t).classList.toggle('active', t === name);
+    $('cspane-' + t).classList.toggle('hidden', t !== name);
+  }
+  if (name === 'prayers') loadChurchPrayers();
+  if (name === 'questions') loadChurchQuestions();
+  if (name === 'chats') loadDmThreads();
+}
+$('cstab-prayers').addEventListener('click', () => selectChurchSocialTab('prayers'));
+$('cstab-questions').addEventListener('click', () => selectChurchSocialTab('questions'));
+$('cstab-chats').addEventListener('click', () => selectChurchSocialTab('chats'));
+
+/* ---------- church social: prayer requests (leader queue) --- */
+async function loadChurchPrayers() {
+  setMsg('cprayers-msg', 'Loading prayer requests…');
+  const { data, error } = await client
+    .from('prayer_requests')
+    .select('*')
+    .eq('group_id', S.churchGroupId)
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(50);
+  if (error) {
+    S.cPrayers = [];
+    renderChurchPrayers();
+    setMsg('cprayers-msg', 'Prayer requests could not load. Check your connection and try again.', 'err');
+    return;
+  }
+  const rows = data || [];
+  const names = await resolveNames(rows.map((r) => r.author_id));
+  S.cPrayers = rows.map((r) => ({
+    id: r.id,
+    body: r.body || '',
+    createdAt: r.created_at,
+    authorName: (names.get(r.author_id) || {}).name || 'Member',
+    seenByLeader: r.seen_by_leader === true,
+    heldForReview: r.held_for_review === true,
+  }));
+  setMsg('cprayers-msg', '');
+  renderChurchPrayers();
+}
+function renderChurchPrayers() {
+  const box = $('cprayer-list');
+  box.replaceChildren();
+  if (S.cPrayers.length === 0) {
+    box.appendChild(h('p', 'muted', 'No prayer requests yet.'));
+    return;
+  }
+  for (const p of S.cPrayers) {
+    box.appendChild(leaderPrayerCard(p, loadChurchPrayers, (t) => setMsg('cprayers-msg', t, 'err')));
+  }
+}
+
+/* ---------- church social: questions (leader queue) --------- */
+async function loadChurchQuestions() {
+  setMsg('cquestions-msg', 'Loading questions…');
+  const { data, error } = await client
+    .from('anonymous_questions')
+    .select('*')
+    .eq('group_id', S.churchGroupId)
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(50);
+  if (error) {
+    S.cQuestions = [];
+    renderChurchQuestions();
+    setMsg('cquestions-msg', 'Questions could not load. Check your connection and try again.', 'err');
+    return;
+  }
+  const rows = data || [];
+  const names = await resolveNames(rows.map((r) => r.author_id));
+  S.cQuestions = rows.map((r) => ({ ...r, authorName: (names.get(r.author_id) || {}).name || 'Member' }));
+  setMsg('cquestions-msg', '');
+  renderChurchQuestions();
+}
+function renderChurchQuestions() {
+  const box = $('cquestion-list');
+  box.replaceChildren();
+  if (S.cQuestions.length === 0) {
+    box.appendChild(h('p', 'muted', 'No questions yet.'));
+    return;
+  }
+  for (const q of S.cQuestions) box.appendChild(churchQuestionCard(q));
+}
+function churchQuestionCard(q) {
+  const card = h('div', 'staticitem');
+  card.appendChild(h('div', 't', q.authorName + (q.held_for_review ? ' — held for review' : '')));
+  const body = h('div', 'bodytext', q.body);
+  body.style.marginTop = '4px';
+  card.appendChild(body);
+  // Lesson questions name their sermon, resolved from the
+  // sermons this side already loaded — no extra fetch.
+  if (q.lesson_id) {
+    const lesson = (S.cLessons || []).find((l) => l.id === q.lesson_id);
+    if (lesson && lesson.title) card.appendChild(h('div', 's', 'About: ' + lesson.title));
+  }
+  card.appendChild(h('div', 's', fmtWhen(q.created_at)));
+  card.appendChild(h('div', 's', q.answered ? 'Answered ✓' : 'Not answered yet'));
+  if (q.answered && q.answer_text) {
+    const lab = h('div', 't', 'Leader answer:');
+    lab.style.marginTop = '10px';
+    card.appendChild(lab);
+    card.appendChild(h('div', 'bodytext', q.answer_text));
+    if (q.answer_video_url && extractYouTubeId(q.answer_video_url)) {
+      const p = h('p');
+      p.style.margin = '8px 0 0';
+      const a = document.createElement('a');
+      a.href = q.answer_video_url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = 'Open in YouTube';
+      p.appendChild(a);
+      card.appendChild(p);
+    }
+    const holder = h('div');
+    const editBtn = h('button', 'btn secondary small', 'Edit answer');
+    editBtn.type = 'button';
+    editBtn.style.marginTop = '10px';
+    editBtn.addEventListener('click', () => holder.replaceChildren(churchAnswerForm(q, true)));
+    holder.appendChild(editBtn);
+    card.appendChild(holder);
+  }
+  if (!q.answered && !q.held_for_review) {
+    card.appendChild(churchAnswerForm(q, false));
+  }
+  // The Studio deletes with a slide; here it is a button, doing
+  // the app's deleteQuestion: resolve open flags first.
+  const row = h('div', 'row-actions');
+  const del = h('button', 'btn danger small', 'Delete question');
+  del.type = 'button';
+  del.addEventListener('click', async () => {
+    if (!window.confirm('Delete this question?')) return;
+    await client.from('safety_flags').update({ status: 'resolved' })
+      .eq('source', 'question').eq('source_id', q.id).eq('status', 'open');
+    const { error } = await client.from('anonymous_questions').delete().eq('id', q.id);
+    if (error) {
+      setMsg('cquestions-msg', 'That question could not be deleted. Check your connection and try again.', 'err');
+      return;
+    }
+    loadChurchQuestions();
+  });
+  row.appendChild(del);
+  card.appendChild(row);
+  return card;
+}
+function churchAnswerForm(q, editing) {
+  const wrap = h('div');
+  wrap.style.marginTop = '10px';
+  const ta = document.createElement('textarea');
+  ta.rows = 3;
+  ta.placeholder = 'Write your answer for the whole group…';
+  ta.value = editing ? (q.answer_text || '') : '';
+  const vi = document.createElement('input');
+  vi.type = 'text';
+  vi.placeholder = 'Video link (YouTube, optional)';
+  vi.value = editing ? (q.answer_video_url || '') : '';
+  vi.style.marginTop = '8px';
+  const row = h('div', 'btnrow');
+  const post = h('button', 'btn small', editing ? 'Save answer' : 'Post answer');
+  post.type = 'button';
+  const msg = h('p', 'msg');
+  post.addEventListener('click', async () => {
+    const text = ta.value.trim();
+    if (!text) { msg.textContent = 'Write your answer first.'; msg.className = 'msg err'; return; }
+    const video = vi.value.trim();
+    if (video && !isYouTubeUrl(video)) {
+      msg.textContent = 'That video link does not look like a YouTube link. Paste a youtube.com or youtu.be link.';
+      msg.className = 'msg err';
+      return;
+    }
+    post.disabled = true;
+    const { error } = await client.from('anonymous_questions').update({
+      answered: true,
+      answer_text: text,
+      answer_video_url: video ? video : null,
+      answered_by: S.user.id,
+      answered_at: new Date().toISOString(),
+    }).eq('id', q.id);
+    post.disabled = false;
+    if (error) {
+      msg.textContent = 'That answer did not save. Check your connection and try again.';
+      msg.className = 'msg err';
+      return;
+    }
+    await loadChurchQuestions();
+    setMsg('cquestions-msg', 'Answer posted — the whole group can see it.', 'ok');
+  });
+  row.appendChild(post);
+  if (editing) {
+    const cancel = h('button', 'btn secondary small', 'Cancel');
+    cancel.type = 'button';
+    cancel.addEventListener('click', () => renderChurchQuestions());
+    row.appendChild(cancel);
+  }
+  wrap.appendChild(ta);
+  wrap.appendChild(vi);
+  wrap.appendChild(row);
+  wrap.appendChild(msg);
+  return wrap;
+}
+
+/* ---------- church social: your own direct messages --------- */
+async function loadDmThreads() {
+  // Always land on the conversation list: a group switch can
+  // never leave another church's thread standing open.
+  S.dmActiveId = null;
+  S.dmMessages = [];
+  $('cdm-thread').classList.add('hidden');
+  $('cdm-list').classList.remove('hidden');
+  setMsg('cdm-msg', 'Loading your conversations…');
+  const { data, error } = await client
+    .from('dm_conversations')
+    .select('*')
+    .eq('group_id', S.churchGroupId)
+    .or('participant_a.eq.' + S.user.id + ',participant_b.eq.' + S.user.id)
+    .order('last_message_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(50);
+  if (error) {
+    S.dmThreads = [];
+    renderDmThreads();
+    setMsg('cdm-msg', 'Your messages could not load. Check your connection and try again.', 'err');
+    return;
+  }
+  const rows = data || [];
+  const names = await resolveNames(
+    rows.map((r) => (r.participant_a === S.user.id ? r.participant_b : r.participant_a)),
+  );
+  S.dmThreads = rows.map((r) => {
+    const other = r.participant_a === S.user.id ? r.participant_b : r.participant_a;
+    return {
+      id: r.id,
+      otherId: other,
+      otherName: (names.get(other) || {}).name || 'Member',
+      lastAt: r.last_message_at || r.created_at || '',
+    };
+  });
+  setMsg('cdm-msg', '');
+  renderDmThreads();
+}
+function renderDmThreads() {
+  const box = $('cdm-list');
+  box.replaceChildren();
+  if (S.dmThreads.length === 0) {
+    box.appendChild(h('p', 'muted', 'No conversations yet.'));
+    return;
+  }
+  for (const t of S.dmThreads) {
+    const item = h('button', 'listitem');
+    item.type = 'button';
+    item.appendChild(h('span', 't', t.otherName));
+    item.appendChild(h('span', 's', t.lastAt ? 'Last message ' + fmtWhen(t.lastAt) : ''));
+    item.addEventListener('click', () => openDmThread(t));
+    box.appendChild(item);
+  }
+}
+async function openDmThread(t) {
+  S.dmActiveId = t.id;
+  S.dmOtherName = t.otherName;
+  $('cdm-list').classList.add('hidden');
+  $('cdm-thread').classList.remove('hidden');
+  $('cdm-title').textContent = t.otherName;
+  setMsg('cdm-send-msg', '');
+  await loadDmMessages();
+}
+async function loadDmMessages() {
+  const box = $('cdm-messages');
+  box.replaceChildren();
+  box.appendChild(h('p', 'muted', 'Loading messages…'));
+  const { data, error } = await client
+    .from('dm_messages')
+    .select('*')
+    .eq('conversation_id', S.dmActiveId)
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(100);
+  if (error) {
+    box.replaceChildren();
+    box.appendChild(h('p', 'muted', 'Messages could not load. Check your connection and try again.'));
+    return;
+  }
+  const rows = (data || []).slice().reverse();
+  S.dmMessages = rows.map((r) => ({
+    id: r.id, authorId: r.author_id, body: r.body || '', createdAt: r.created_at,
+  }));
+  S.dmHasEarlier = (data || []).length === 100;
+  renderDmMessages();
+}
+function renderDmMessages() {
+  $('cdm-earlier').classList.toggle('hidden', !S.dmHasEarlier);
+  const box = $('cdm-messages');
+  box.replaceChildren();
+  if (S.dmMessages.length === 0) {
+    box.appendChild(h('p', 'muted', 'No messages yet.'));
+    return;
+  }
+  for (const m of S.dmMessages) {
+    const row = h('div', 'chatmsg');
+    const head = h('div');
+    head.appendChild(h('span', 'who', m.authorId === S.user.id ? 'You' : S.dmOtherName));
+    head.appendChild(h('span', 'when', fmtWhen(m.createdAt)));
+    row.appendChild(head);
+    row.appendChild(h('div', 'txt', m.body));
+    if (m.authorId === S.user.id) {
+      // Authors delete their own messages only (migration 031) —
+      // the same gate the app's slide runs against.
+      const actions = h('div', 'row-actions');
+      const del = h('button', 'btn danger small', 'Delete');
+      del.type = 'button';
+      del.addEventListener('click', async () => {
+        if (!window.confirm('Delete this message?')) return;
+        const removed = await client.from('dm_messages').delete()
+          .eq('id', m.id).eq('author_id', S.user.id).select('id');
+        if (removed.error || !removed.data || removed.data.length === 0) {
+          setMsg('cdm-send-msg', 'That message could not be deleted.', 'err');
+          return;
+        }
+        loadDmMessages();
+      });
+      actions.appendChild(del);
+      row.appendChild(actions);
+    }
+    box.appendChild(row);
+  }
+}
+$('cdm-earlier').addEventListener('click', async () => {
+  const oldest = S.dmMessages[0];
+  if (!oldest || !S.dmActiveId) return;
+  // The app's (created_at, id) cursor (paging.ts olderThanCursor):
+  // strictly older than the oldest loaded row, never a repeat.
+  const cursor = 'created_at.lt.' + oldest.createdAt
+    + ',and(created_at.eq.' + oldest.createdAt + ',id.lt.' + oldest.id + ')';
+  const { data, error } = await client
+    .from('dm_messages')
+    .select('*')
+    .eq('conversation_id', S.dmActiveId)
+    .or(cursor)
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(100);
+  if (error || !data) return;
+  S.dmHasEarlier = data.length === 100;
+  const have = new Set(S.dmMessages.map((m) => m.id));
+  const older = data.slice().reverse()
+    .map((r) => ({ id: r.id, authorId: r.author_id, body: r.body || '', createdAt: r.created_at }))
+    .filter((m) => !have.has(m.id));
+  S.dmMessages = [...older, ...S.dmMessages];
+  renderDmMessages();
+});
+$('cdm-back').addEventListener('click', () => {
+  S.dmActiveId = null;
+  S.dmMessages = [];
+  $('cdm-thread').classList.add('hidden');
+  $('cdm-list').classList.remove('hidden');
+  loadDmThreads();
+});
+$('cdm-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  if (!S.dmActiveId) return;
+  const text = $('cdm-body').value.trim();
+  if (!text) { setMsg('cdm-send-msg', 'Write a message first.', 'err'); return; }
+  const { error } = await client
+    .from('dm_messages')
+    .insert({ conversation_id: S.dmActiveId, author_id: S.user.id, body: text })
+    .select('*')
+    .single();
+  if (error) {
+    setMsg('cdm-send-msg', 'That message did not send. Check your connection and try again.', 'err');
+    return;
+  }
+  $('cdm-body').value = '';
+  setMsg('cdm-send-msg', 'Sent.', 'ok');
+  loadDmMessages();
+});
 
 /* ---------- church announcements ---------- */
 async function fetchChurchAnnouncements() {
