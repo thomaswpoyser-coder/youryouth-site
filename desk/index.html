@@ -1600,6 +1600,10 @@ async function loadLessons() {
   S.lessons = data || [];
   setMsg('lessons-msg', '');
   renderLessonList();
+  // Question cards name their lesson from S.lessons (P15); the
+  // boot fires both loads un-awaited, so re-render the queue now
+  // the titles are in hand.
+  if (S.questions && S.questions.length) renderQuestions();
 }
 function renderLessonList() {
   const box = $('lesson-list');
@@ -1965,6 +1969,16 @@ function questionCard(q) {
   const body = h('div', 'bodytext', q.body);
   body.style.marginTop = '4px';
   card.appendChild(body);
+  // Lesson questions (Step 32, P15): a question asked about a
+  // posted lesson carries its lesson_id (the column arrives with
+  // migration 032, applied from master). Name the lesson when it
+  // is among the ones this side already loaded — no extra fetch.
+  // No lesson_id, or a lesson not in hand, renders exactly as
+  // before.
+  if (q.lesson_id) {
+    const lesson = (S.lessons || []).find((l) => l.id === q.lesson_id);
+    if (lesson && lesson.title) card.appendChild(h('div', 's', 'About: ' + lesson.title));
+  }
   card.appendChild(h('div', 's', fmtWhen(q.created_at)));
   card.appendChild(h('div', 's', q.answered ? 'Answered ✓' : 'Not answered yet'));
   if (q.answered && q.answer_text) {
