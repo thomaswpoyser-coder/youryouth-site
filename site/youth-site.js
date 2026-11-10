@@ -32,6 +32,19 @@
    a name by the function), the footer quietly names the church
    and links to its Your People page.
 
+   The footer also carries the group's own social links when
+   the leader has set them (the payload's `socials` — the
+   GROUP's own public pages, never a member's; shaped at the
+   function door and re-checked here): a quiet row of the links
+   actually set, nothing when none are. And each claimed
+   address now also exists as a real static page, generated
+   from this same payload by tools/generate-static-pages.mjs:
+   its pre-rendered floor (the group's name and published
+   facts in plain HTML, with its own title and structured
+   data) is what search engines and slow connections meet
+   first, and this renderer takes over from it exactly as it
+   does from the shells.
+
    Edit-in-place: a signed-in LEADER of this group (the desk
    session carries over — same origin) gets a discreet edit bar
    and can write the welcome, meeting time and place, flip each
@@ -69,6 +82,13 @@ function show(id) {
   // Any finished view — the page itself or a graceful state —
   // settles the shell's self-healing watchdog.
   if (window.__yySettled) window.__yySettled();
+  // A generated static page (tools/generate-static-pages.mjs)
+  // carries a plain-HTML floor of the group's own published
+  // facts for search engines and slow connections; the live
+  // page now showing replaces it, so it steps aside. The
+  // shells carry no floor — this is a no-op there.
+  const floor = $('static-floor');
+  if (floor) floor.remove();
   for (const v of ['view-loading', 'view-state', 'view-site']) {
     $(v).classList.toggle('hidden', v !== id);
   }
@@ -106,6 +126,60 @@ function firstLine(text) {
 function directionsUrl(data) {
   const q = (data.name + ' ' + (data.address || '')).trim();
   return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+}
+
+/* The group's own social links, in the footer's fixed order.
+   The marks are this template's own fixed strings — no
+   group-written content is ever parsed as HTML; a URL rides
+   in an href only after the check in cleanSocials below. */
+const SOCIAL_SERVICES = [
+  ['facebook', 'Facebook'],
+  ['instagram', 'Instagram'],
+  ['youtube', 'YouTube'],
+  ['x', 'X'],
+];
+const SOCIAL_SVGS = {
+  facebook: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+  instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.25"/><circle cx="17.55" cy="6.45" r="0.6" fill="currentColor" stroke="none"/></svg>',
+  youtube: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H4.68l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+};
+/* Socials arrive shaped by the function; this is the
+   render-side twin of that shaping (the same http(s)-only
+   rule), so an older deployed function — or a hand-edited
+   settings row behind a newer one — can never push a
+   non-address into the footer. */
+function cleanSocials(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const [key] of SOCIAL_SERVICES) {
+    const v = typeof raw[key] === 'string' ? raw[key].trim().slice(0, 500) : '';
+    if (/^https?:\/\//i.test(v)) out[key] = v;
+  }
+  return out;
+}
+/* The footer's quiet social row: only the links the group
+   actually set, each a small mark with its service's name
+   beside it and in its accessible label. Nothing set — the
+   row is not on the page at all. */
+function renderSocials(data) {
+  const box = $('foot-socials');
+  if (!box) return;
+  const socials = cleanSocials(data.socials);
+  box.replaceChildren();
+  for (const [key, label] of SOCIAL_SERVICES) {
+    const url = socials[key];
+    if (!url) continue;
+    const a = h('a', 'soc');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.setAttribute('aria-label', data.name + ' on ' + label);
+    a.innerHTML = SOCIAL_SVGS[key];
+    a.appendChild(h('span', null, label));
+    box.appendChild(a);
+  }
+  box.classList.toggle('hidden', box.children.length === 0);
 }
 
 /* The browser tab carries the group's identity too: its logo
@@ -262,6 +336,8 @@ function render(data) {
   if (placeLine) fl.push(placeLine);
   if (mainTime) fl.push(mainTime);
   $('foot-line').textContent = fl.join(' · ') + (fl.length ? ' · ' : '') + '© ' + new Date().getFullYear() + ' ' + data.name;
+  // the group's own social links — only the ones it set.
+  renderSocials(data);
 
   show('view-site');
 }

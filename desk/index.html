@@ -490,6 +490,16 @@
             </div>
             <label for="ys-church-code">Linked church join code (shows a link to your church's site)</label>
             <input type="text" id="ys-church-code" maxlength="24" placeholder="e.g. CENTREVILLEB">
+            <label style="margin-top:14px">Your group online</label>
+            <p class="hint" style="margin:0 0 4px">Your group&rsquo;s own pages &mdash; they show as small links at the foot of your public page. Paste the full address of each one; leave the ones you don&rsquo;t use empty.</p>
+            <label for="ys-social-facebook">Facebook</label>
+            <input type="text" id="ys-social-facebook" maxlength="500" placeholder="https://www.facebook.com/&hellip;">
+            <label for="ys-social-instagram">Instagram</label>
+            <input type="text" id="ys-social-instagram" maxlength="500" placeholder="https://www.instagram.com/&hellip;">
+            <label for="ys-social-youtube">YouTube</label>
+            <input type="text" id="ys-social-youtube" maxlength="500" placeholder="https://www.youtube.com/&hellip;">
+            <label for="ys-social-x">X</label>
+            <input type="text" id="ys-social-x" maxlength="500" placeholder="https://x.com/&hellip;">
             <div class="btnrow">
               <button class="btn" type="submit">Save</button>
               <a class="btn secondary" id="ys-view" href="#" target="_blank" rel="noopener">View your page</a>
@@ -864,6 +874,16 @@
           <label for="site-youth-code">Youth group join code</label>
           <input type="text" id="site-youth-code" maxlength="40" placeholder="e.g. SOULFIREYOUT" autocapitalize="characters" autocomplete="off" spellcheck="false">
           <p class="hint">Links your public page to your youth group&rsquo;s page &mdash; if your youth group is on Your Youth, type its join code and your church site footer gains a quiet link to it. Leave it empty if you don&rsquo;t have one.</p>
+          <label style="margin-top:22px">Find us online</label>
+          <p class="hint" style="margin-top:0">Your church&rsquo;s own pages &mdash; they show as small links at the foot of your church site. Paste the full address of each one; leave the ones you don&rsquo;t use empty.</p>
+          <label for="site-social-facebook">Facebook</label>
+          <input type="text" id="site-social-facebook" maxlength="500" placeholder="https://www.facebook.com/&hellip;">
+          <label for="site-social-instagram">Instagram</label>
+          <input type="text" id="site-social-instagram" maxlength="500" placeholder="https://www.instagram.com/&hellip;">
+          <label for="site-social-youtube">YouTube</label>
+          <input type="text" id="site-social-youtube" maxlength="500" placeholder="https://www.youtube.com/&hellip;">
+          <label for="site-social-x">X</label>
+          <input type="text" id="site-social-x" maxlength="500" placeholder="https://x.com/&hellip;">
           <label style="margin-top:22px">Ministries</label>
           <p class="hint" style="margin-top:0">The groups and gatherings your church runs &mdash; a name, when it meets, and a sentence in your own words. They appear on your church site under Ministries, in the order below.</p>
           <div id="site-ministries"></div>
@@ -4209,6 +4229,11 @@ function loadYouthSite() {
   $('ys-show-events').checked = !!site.showEvents;
   $('ys-slug').value = typeof site.slug === 'string' ? site.slug : '';
   $('ys-church-code').value = typeof settings.linkedChurchCode === 'string' ? settings.linkedChurchCode : '';
+  const ysSocials = (site.socials && typeof site.socials === 'object') ? site.socials : {};
+  $('ys-social-facebook').value = typeof ysSocials.facebook === 'string' ? ysSocials.facebook : '';
+  $('ys-social-instagram').value = typeof ysSocials.instagram === 'string' ? ysSocials.instagram : '';
+  $('ys-social-youtube').value = typeof ysSocials.youtube === 'string' ? ysSocials.youtube : '';
+  $('ys-social-x').value = typeof ysSocials.x === 'string' ? ysSocials.x : '';
   /* View links are absolute to each product's home domain: this one
      desk file is served from both doors, and a relative link would
      resolve against whichever door the leader entered through —
@@ -4235,6 +4260,20 @@ $('ys-form').addEventListener('submit', async (e) => {
   site.showMeetingTime = $('ys-show-meeting').checked;
   site.showPlace = $('ys-show-place').checked;
   site.showEvents = $('ys-show-events').checked;
+  /* The group's own social links (settings.site.socials): each
+     one the leader filled in must be a full http(s) address —
+     anything else is called out by name rather than saved, and
+     an all-empty set clears the stored object entirely. */
+  const ysSocials = {};
+  let ysSocialBad = '';
+  for (const [id, key, label] of [['ys-social-facebook', 'facebook', 'Facebook'], ['ys-social-instagram', 'instagram', 'Instagram'], ['ys-social-youtube', 'youtube', 'YouTube'], ['ys-social-x', 'x', 'X']]) {
+    const v = $(id).value.trim();
+    if (!v) continue;
+    if (!/^https?:\/\//i.test(v)) { ysSocialBad = label; break; }
+    ysSocials[key] = v;
+  }
+  if (ysSocialBad) { setMsg('ys-msg', 'That ' + ysSocialBad + ' address doesn’t start with https:// — paste the full address of the page.', 'err'); return; }
+  site.socials = Object.keys(ysSocials).length ? ysSocials : undefined;
   const code = $('ys-church-code').value.trim().toUpperCase();
   settings.linkedChurchCode = code || undefined;
   settings.site = site;
@@ -4445,6 +4484,11 @@ async function loadSiteSettings() {
   $('site-giving').value = typeof S.settings.tithelyUrl === 'string' ? S.settings.tithelyUrl : '';
   $('site-giving-canadahelps').value = typeof S.settings.canadaHelpsUrl === 'string' ? S.settings.canadaHelpsUrl : '';
   $('site-youth-code').value = typeof site.linkedYouthCode === 'string' ? site.linkedYouthCode : '';
+  const siteSocials = (site.socials && typeof site.socials === 'object') ? site.socials : {};
+  $('site-social-facebook').value = typeof siteSocials.facebook === 'string' ? siteSocials.facebook : '';
+  $('site-social-instagram').value = typeof siteSocials.instagram === 'string' ? siteSocials.instagram : '';
+  $('site-social-youtube').value = typeof siteSocials.youtube === 'string' ? siteSocials.youtube : '';
+  $('site-social-x').value = typeof siteSocials.x === 'string' ? siteSocials.x : '';
   S.siteMinistries = (Array.isArray(site.ministries) ? site.ministries : [])
     .filter((m) => m && typeof m === 'object')
     .map((m) => ({
@@ -4466,6 +4510,23 @@ async function saveSiteSettings(successText) {
   site.serviceTimes = $('site-times').value.trim();
   site.address = $('site-address').value.trim();
   site.linkedYouthCode = $('site-youth-code').value.trim().toUpperCase();
+  /* The church's own social links (settings.site.socials):
+     each one the leader filled in must be a full http(s)
+     address — anything else is called out by name rather
+     than saved. */
+  const socials = {};
+  let socialBad = '';
+  for (const [id, key, label] of [['site-social-facebook', 'facebook', 'Facebook'], ['site-social-instagram', 'instagram', 'Instagram'], ['site-social-youtube', 'youtube', 'YouTube'], ['site-social-x', 'x', 'X']]) {
+    const v = $(id).value.trim();
+    if (!v) continue;
+    if (!/^https?:\/\//i.test(v)) { socialBad = label; break; }
+    socials[key] = v;
+  }
+  if (socialBad) {
+    setMsg('site-msg', 'That ' + socialBad + ' address doesn’t start with https:// — paste the full address of the page.', 'err');
+    return false;
+  }
+  site.socials = socials;
   site.ministries = siteMinistriesClean(S.siteMinistries);
   site.photos = [...S.sitePhotos].slice(0, SITE_PHOTO_MAX);
   const next = { ...S.settings, site, tithelyUrl: $('site-giving').value.trim(), canadaHelpsUrl: $('site-giving-canadahelps').value.trim() };

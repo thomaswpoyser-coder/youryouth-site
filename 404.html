@@ -130,6 +130,15 @@
     font-size:14.5px;color:var(--ink-soft);text-align:center}
   footer.foot .fbrand{color:var(--ink);font-size:17px;font-weight:900}
   footer.foot .churchline{margin:8px 0 0;font-size:15px}
+  /* the group's own social links — a quiet row of small
+     marks + names, only the ones the group set */
+  footer.foot .socials{margin-top:12px;display:flex;gap:6px 20px;
+    justify-content:center;flex-wrap:wrap}
+  footer.foot .socials a{display:inline-flex;align-items:center;gap:7px;
+    color:var(--ink-soft);text-decoration:none;font-size:14px;font-weight:700;min-height:32px}
+  footer.foot .socials a:hover{color:var(--green)}
+  html[data-theme="dark"] footer.foot .socials a:hover{color:var(--gold)}
+  footer.foot .socials svg{width:17px;height:17px;flex:none}
 
   .center-card{max-width:520px;margin:10vh auto 0;background:var(--surface);
     border:1px solid var(--line);border-radius:var(--radius);padding:28px;text-align:center;
@@ -282,6 +291,7 @@
       <footer class="foot">
         <div class="fbrand" id="foot-name"></div>
         <div id="foot-line"></div>
+        <div id="foot-socials" class="socials hidden"></div>
         <p class="churchline hidden" id="church-link-wrap">Part of <a id="church-link" href="#" target="_blank" rel="noopener"></a></p>
         <div style="margin-top:10px">This page is <span id="foot-name-2"></span>&rsquo;s own, made with <a href="/">Your Youth</a>.</div>
       </footer>
@@ -353,6 +363,6 @@
   }, 8000);
 })();
 </script>
-<script src="/site/youth-site.js?v=4"></script>
+<script src="/site/youth-site.js?v=6"></script>
 </body>
 </html>
