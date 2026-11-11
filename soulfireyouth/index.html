@@ -110,6 +110,17 @@
   .row .t{font-weight:900;font-size:17px}
   .row .s{color:var(--ink-soft);font-size:14.5px;margin-top:1px;font-weight:600}
   .row .n{white-space:pre-wrap;margin-top:4px;color:var(--ink-soft)}
+  /* leaders — who a visitor will meet: a name, the title
+     beneath it, one short line in the person's own words, and
+     a photo when the group gave one; the card reads the same
+     with no photo at all */
+  .leadcard{background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);padding:18px 20px;display:flex;
+    gap:16px;align-items:flex-start;margin:0 0 14px}
+  .leadcard img{width:84px;height:84px;border-radius:50%;object-fit:cover;flex:none}
+  .leadcard .t{font-weight:900;font-size:19px;line-height:1.25}
+  .leadcard .s{color:var(--gold-deep);font-weight:800;font-size:14.5px;margin-top:1px}
+  .leadcard .b{white-space:pre-wrap;margin-top:4px;color:var(--ink-soft)}
   /* the app card — the way in. The join code must never clip:
      modest size and spacing, and it may wrap. */
   .appcard{border:1.5px solid var(--gold);border-radius:var(--radius);
@@ -276,6 +287,11 @@
         </div>
       </section>
 
+      <section class="block hidden" id="sec-leaders">
+        <h2 id="leaders-heading">Meet the leaders</h2>
+        <div id="site-leaders"></div>
+      </section>
+
       <section class="block hidden" id="sec-pageset">
         <h2>Your public page</h2>
         <div class="edit-fields">
@@ -381,6 +397,6 @@
   }, 8000);
 })();
 </script>
-<script src="/site/youth-site.js?v=6"></script>
+<script src="/site/youth-site.js?v=7"></script>
 </body>
 </html>

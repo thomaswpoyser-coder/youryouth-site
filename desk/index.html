@@ -143,6 +143,9 @@
   .photogrid figure{margin:0;width:150px}
   .photogrid img{width:150px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}
   .photogrid figcaption{margin-top:5px;text-align:center}
+  /* site leaders editor (both kinds) — a leader's photo, round */
+  .leadthumb{width:84px;height:84px;border-radius:50%;object-fit:cover;
+    border:1px solid var(--line);display:block;margin-top:8px}
   input[type=file]{font:inherit;color:var(--ink)}
   .ws-grid{display:grid;grid-template-columns:320px minmax(560px,1fr) 320px;gap:18px;align-items:start}
   /* Posted lessons/sermons: their own block BELOW the workstation
@@ -500,6 +503,14 @@
             <input type="text" id="ys-social-youtube" maxlength="500" placeholder="https://www.youtube.com/&hellip;">
             <label for="ys-social-x">X</label>
             <input type="text" id="ys-social-x" maxlength="500" placeholder="https://x.com/&hellip;">
+            <label style="margin-top:14px">Leaders &mdash; who visitors will meet</label>
+            <p class="hint" style="margin:0 0 4px">The leaders to introduce on your public page &mdash; a name, their title (e.g. Youth Leader), and a short line in their own words, with a photo if you have one. Only the people you add here appear; nothing is taken from the group. Leave the list empty and the section stays off your page.</p>
+            <label for="ys-leaders-title">Section heading</label>
+            <input type="text" id="ys-leaders-title" maxlength="60" placeholder="Meet the leaders">
+            <div id="ys-leaders" style="margin-top:10px"></div>
+            <div class="btnrow" style="margin-top:10px">
+              <button class="btn secondary" type="button" id="ys-leader-add">Add a leader</button>
+            </div>
             <div class="btnrow">
               <button class="btn" type="submit">Save</button>
               <a class="btn secondary" id="ys-view" href="#" target="_blank" rel="noopener">View your page</a>
@@ -890,6 +901,14 @@
           <div class="btnrow" style="margin-top:10px">
             <button class="btn secondary" type="button" id="site-ministry-add">Add a ministry</button>
           </div>
+          <label style="margin-top:22px">Leaders &mdash; who visitors will meet</label>
+          <p class="hint" style="margin-top:0">The pastors and leaders to introduce on your church site &mdash; a name, their title, and a short line in their own words, with a photo if you have one. Only the people you add here appear; nothing is taken from the directory or the membership. Leave the list empty and the section stays off your site.</p>
+          <label for="site-leaders-title">Section heading</label>
+          <input type="text" id="site-leaders-title" maxlength="60" placeholder="Our pastors">
+          <div id="site-leaders" style="margin-top:10px"></div>
+          <div class="btnrow" style="margin-top:10px">
+            <button class="btn secondary" type="button" id="site-leader-add">Add a leader</button>
+          </div>
           <div class="btnrow">
             <button class="btn" type="submit" id="site-save">Save site details</button>
           </div>
@@ -1181,7 +1200,7 @@ const S = {
   lessons: [], questions: [], events: [], announcements: [], myPrayers: [],
   prayers: [], chatMessages: [], chatHeldFlags: [], socialTab: 'prayers',
   cLessons: [], cEditingId: null, cAssistOk: null, cAssistWhy: '',
-  settings: null, siteMinistries: [], sitePhotos: [], siteSlug: '', siteBucketOk: null,
+  settings: null, siteMinistries: [], siteLeaders: [], sitePhotos: [], siteSlug: '', siteBucketOk: null,
   bootDone: false, recovering: false,
   churchAnnouncements: [], churchEvents: [], directory: [],
   cQuestions: [], cPrayers: [], cSocialTab: 'prayers',
@@ -4214,6 +4233,183 @@ async function loadChurchDirectory() {
 }
 
 
+/* ================= SITE LEADERS (both kinds) =================
+   The leaders listing lives at settings.site.leaders as
+   {name, title, line, photo} in the leaders' chosen order —
+   the same deliberate, curated shape as the church's
+   ministries: nothing is read from memberships, profiles or
+   the directory, there are no contact details, and an entry
+   exists only because a leader typed it for the public page.
+   `photo` is a PATH in the church-site-photos bucket ("<group
+   id>/<file>") — the bucket's write rules key on leadership
+   of the folder's group, so youth groups use it on the same
+   terms — and uploads go through prepareSitePhoto, so they
+   are shrunk on this device first and never refused for size.
+   The shared editor below serves both site tabs; each side
+   keeps its own working copy and its own save. ------------- */
+const SITE_LEADER_MAX = 12;
+let ysLeaders = [];
+function siteLeadersClean(list) {
+  return (Array.isArray(list) ? list : [])
+    .map((e) => {
+      const photo = String((e && e.photo) || '').trim().slice(0, 300);
+      return {
+        name: String((e && e.name) || '').trim().slice(0, 80),
+        title: String((e && e.title) || '').trim().slice(0, 80),
+        line: String((e && e.line) || '').trim().slice(0, 240),
+        photo: photo && !photo.includes('://') && !photo.startsWith('/') && !photo.includes('\\') ? photo : '',
+      };
+    })
+    .filter((e) => e.name && e.title)
+    .slice(0, SITE_LEADER_MAX);
+}
+async function uploadLeaderPhoto(groupId, file) {
+  const prepared = await prepareSitePhoto(file);
+  const safeName = (prepared.name || 'photo').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-60);
+  const path = groupId + '/leaders-' + Date.now() + '-' + safeName;
+  const opts = prepared.blob && prepared.blob.type ? { contentType: prepared.blob.type } : undefined;
+  const { error } = await client.storage.from('church-site-photos').upload(path, prepared.blob, opts);
+  if (error) return null;
+  return path;
+}
+/* One editor for both tabs: it renders `list` into `box`, the
+   inputs write straight into the entries, and the photo
+   buttons call back into the owning side (hooks.upload /
+   hooks.removePhoto), which persists through its own save —
+   a photo change saves at once, like the church site photos. */
+function renderLeaderEditor(box, list, hooks) {
+  box.replaceChildren();
+  if (list.length === 0) {
+    box.appendChild(h('p', 'muted', 'No leaders listed yet.'));
+    return;
+  }
+  list.forEach((e, i) => {
+    const row = h('div', 'minrow');
+    const fields = [
+      ['name', 'Name', 80, false],
+      ['title', 'Title', 80, false],
+      ['line', 'A short line in their own words', 240, true],
+    ];
+    for (const [key, label, max, area] of fields) {
+      const lab = h('label', null, label);
+      const input = document.createElement(area ? 'textarea' : 'input');
+      if (!area) input.type = 'text';
+      if (area) input.rows = 2;
+      input.maxLength = max;
+      input.value = e[key] || '';
+      input.addEventListener('input', () => { list[i][key] = input.value; });
+      lab.appendChild(input);
+      row.appendChild(lab);
+    }
+    const photoLab = h('label', null, 'Photo (optional)');
+    row.appendChild(photoLab);
+    if (e.photo) {
+      const url = sitePhotoUrl(e.photo);
+      if (url) {
+        const img = document.createElement('img');
+        img.className = 'leadthumb';
+        img.src = url;
+        img.alt = '';
+        row.appendChild(img);
+      }
+      const prow = h('div', 'row-actions');
+      const rmPhoto = h('button', 'btn danger small', 'Remove photo');
+      rmPhoto.type = 'button';
+      rmPhoto.addEventListener('click', () => hooks.removePhoto(i));
+      prow.appendChild(rmPhoto);
+      row.appendChild(prow);
+    } else {
+      const prow = h('div', 'row-actions');
+      const file = document.createElement('input');
+      file.type = 'file';
+      file.accept = 'image/*';
+      const add = h('button', 'btn secondary small', 'Add photo');
+      add.type = 'button';
+      add.addEventListener('click', async () => {
+        const f = file.files && file.files[0];
+        if (!f) { hooks.msg('Choose a photo first.', 'err'); return; }
+        add.disabled = true;
+        await hooks.upload(i, f);
+        add.disabled = false;
+      });
+      prow.appendChild(file);
+      prow.appendChild(add);
+      row.appendChild(prow);
+    }
+    const actions = h('div', 'row-actions');
+    const up = h('button', 'btn secondary small', 'Move up');
+    up.type = 'button';
+    up.disabled = i === 0;
+    up.addEventListener('click', () => { moveLeader(list, i, -1); hooks.rerender(); });
+    const down = h('button', 'btn secondary small', 'Move down');
+    down.type = 'button';
+    down.disabled = i === list.length - 1;
+    down.addEventListener('click', () => { moveLeader(list, i, 1); hooks.rerender(); });
+    const rm = h('button', 'btn danger small', 'Remove');
+    rm.type = 'button';
+    rm.addEventListener('click', () => { list.splice(i, 1); hooks.rerender(); });
+    actions.appendChild(up);
+    actions.appendChild(down);
+    actions.appendChild(rm);
+    row.appendChild(actions);
+    box.appendChild(row);
+  });
+}
+function moveLeader(list, i, delta) {
+  const j = i + delta;
+  if (j < 0 || j >= list.length) return;
+  const t = list[i];
+  list[i] = list[j];
+  list[j] = t;
+}
+/* The youth side's own save for a photo change: the same
+   read-merge-write of settings.site the youth form performs,
+   carrying the leaders list and its heading. */
+async function saveYsLeaders(msg) {
+  const m = currentMembership();
+  if (!m) return;
+  const settings = { ...((m.group.settings && typeof m.group.settings === 'object') ? m.group.settings : {}) };
+  const site = { ...((settings.site && typeof settings.site === 'object') ? settings.site : {}) };
+  site.leaders = siteLeadersClean(ysLeaders);
+  site.leadersTitle = $('ys-leaders-title').value.trim() || undefined;
+  settings.site = site;
+  const { error } = await client.from('groups').update({ settings }).eq('id', m.group.id);
+  if (error) { setMsg('ys-msg', 'Could not save: ' + error.message, 'err'); return; }
+  m.group.settings = settings;
+  setMsg('ys-msg', msg || 'Saved. Your public page updates right away.', 'ok');
+}
+function renderYsLeaders() {
+  renderLeaderEditor($('ys-leaders'), ysLeaders, {
+    msg: (t, k) => setMsg('ys-msg', t, k),
+    rerender: renderYsLeaders,
+    upload: async (i, file) => {
+      const m = currentMembership();
+      if (!m) return;
+      setMsg('ys-msg', 'Adding the photo…');
+      const path = await uploadLeaderPhoto(m.group.id, file);
+      if (!path) { setMsg('ys-msg', 'That photo did not upload. Check your connection and try again.', 'err'); return; }
+      ysLeaders[i].photo = path;
+      renderYsLeaders();
+      await saveYsLeaders('Photo added — your public page shows it now.');
+    },
+    removePhoto: async (i) => {
+      const old = ysLeaders[i].photo;
+      ysLeaders[i].photo = '';
+      renderYsLeaders();
+      await saveYsLeaders('Photo removed.');
+      if (old) { try { await client.storage.from('church-site-photos').remove([old]); } catch (_e) { /* best effort */ } }
+    },
+  });
+}
+$('ys-leader-add').addEventListener('click', () => {
+  if (ysLeaders.length >= SITE_LEADER_MAX) {
+    setMsg('ys-msg', 'Twelve leaders is the most the page holds.', 'err');
+    return;
+  }
+  ysLeaders.push({ name: '', title: '', line: '', photo: '' });
+  renderYsLeaders();
+});
+
 /* ================= YOUR YOUTH SITE (leader) ================= */
 function loadYouthSite() {
   const m = currentMembership();
@@ -4229,6 +4425,16 @@ function loadYouthSite() {
   $('ys-show-events').checked = !!site.showEvents;
   $('ys-slug').value = typeof site.slug === 'string' ? site.slug : '';
   $('ys-church-code').value = typeof settings.linkedChurchCode === 'string' ? settings.linkedChurchCode : '';
+  ysLeaders = (Array.isArray(site.leaders) ? site.leaders : [])
+    .filter((e) => e && typeof e === 'object')
+    .map((e) => ({
+      name: typeof e.name === 'string' ? e.name : '',
+      title: typeof e.title === 'string' ? e.title : '',
+      line: typeof e.line === 'string' ? e.line : '',
+      photo: typeof e.photo === 'string' ? e.photo : '',
+    }));
+  $('ys-leaders-title').value = typeof site.leadersTitle === 'string' ? site.leadersTitle : '';
+  renderYsLeaders();
   const ysSocials = (site.socials && typeof site.socials === 'object') ? site.socials : {};
   $('ys-social-facebook').value = typeof ysSocials.facebook === 'string' ? ysSocials.facebook : '';
   $('ys-social-instagram').value = typeof ysSocials.instagram === 'string' ? ysSocials.instagram : '';
@@ -4274,6 +4480,11 @@ $('ys-form').addEventListener('submit', async (e) => {
   }
   if (ysSocialBad) { setMsg('ys-msg', 'That ' + ysSocialBad + ' address doesn’t start with https:// — paste the full address of the page.', 'err'); return; }
   site.socials = Object.keys(ysSocials).length ? ysSocials : undefined;
+  /* The leaders listing (settings.site.leaders): the working
+     copy the editor kept, cleaned the same way the public
+     page's door cleans it; the heading rides along. */
+  site.leaders = siteLeadersClean(ysLeaders);
+  site.leadersTitle = $('ys-leaders-title').value.trim() || undefined;
   const code = $('ys-church-code').value.trim().toUpperCase();
   settings.linkedChurchCode = code || undefined;
   settings.site = site;
@@ -4497,9 +4708,19 @@ async function loadSiteSettings() {
       place: typeof m.place === 'string' ? m.place : '',
       blurb: typeof m.blurb === 'string' ? m.blurb : '',
     }));
+  S.siteLeaders = (Array.isArray(site.leaders) ? site.leaders : [])
+    .filter((e) => e && typeof e === 'object')
+    .map((e) => ({
+      name: typeof e.name === 'string' ? e.name : '',
+      title: typeof e.title === 'string' ? e.title : '',
+      line: typeof e.line === 'string' ? e.line : '',
+      photo: typeof e.photo === 'string' ? e.photo : '',
+    }));
+  $('site-leaders-title').value = typeof site.leadersTitle === 'string' ? site.leadersTitle : '';
   S.sitePhotos = Array.isArray(site.photos) ? site.photos.filter((p) => typeof p === 'string') : [];
   setMsg('site-msg', '');
   renderSiteMinistries();
+  renderSiteLeaders();
   renderSitePhotos();
   probeSiteBucket();
 }
@@ -4528,6 +4749,8 @@ async function saveSiteSettings(successText) {
   }
   site.socials = socials;
   site.ministries = siteMinistriesClean(S.siteMinistries);
+  site.leaders = siteLeadersClean(S.siteLeaders);
+  site.leadersTitle = $('site-leaders-title').value.trim();
   site.photos = [...S.sitePhotos].slice(0, SITE_PHOTO_MAX);
   const next = { ...S.settings, site, tithelyUrl: $('site-giving').value.trim(), canadaHelpsUrl: $('site-giving-canadahelps').value.trim() };
   const { error } = await client.from('groups').update({ settings: next }).eq('id', S.churchGroupId);
@@ -4621,6 +4844,43 @@ $('site-ministry-add').addEventListener('click', () => {
   }
   S.siteMinistries.push({ name: '', when: '', place: '', blurb: '' });
   renderSiteMinistries();
+});
+/* ---------- site leaders (church) ----------
+   The church's listed leaders live at settings.site.leaders as
+   {name, title, line, photo} in the leaders' chosen order —
+   the shared editor above renders the working copy in
+   S.siteLeaders, and the tab's save cleans it the same way the
+   public page's door does. A photo change saves at once,
+   through the same save as the site photos. ----------------- */
+function renderSiteLeaders() {
+  renderLeaderEditor($('site-leaders'), S.siteLeaders, {
+    msg: (t, k) => setMsg('site-msg', t, k),
+    rerender: renderSiteLeaders,
+    upload: async (i, file) => {
+      if (!S.churchGroupId) return;
+      setMsg('site-msg', 'Adding the photo…');
+      const path = await uploadLeaderPhoto(S.churchGroupId, file);
+      if (!path) { setMsg('site-msg', 'That photo did not upload. Check your connection and try again.', 'err'); return; }
+      S.siteLeaders[i].photo = path;
+      renderSiteLeaders();
+      await saveSiteSettings('Leader photo added — your church site shows it now.');
+    },
+    removePhoto: async (i) => {
+      const old = S.siteLeaders[i].photo;
+      S.siteLeaders[i].photo = '';
+      renderSiteLeaders();
+      await saveSiteSettings('Leader photo removed.');
+      if (old) { try { await client.storage.from('church-site-photos').remove([old]); } catch (_e) { /* best effort */ } }
+    },
+  });
+}
+$('site-leader-add').addEventListener('click', () => {
+  if (S.siteLeaders.length >= SITE_LEADER_MAX) {
+    setMsg('site-msg', 'Twelve leaders is the most the site holds.', 'err');
+    return;
+  }
+  S.siteLeaders.push({ name: '', title: '', line: '', photo: '' });
+  renderSiteLeaders();
 });
 $('site-form').addEventListener('submit', async (ev) => {
   ev.preventDefault();

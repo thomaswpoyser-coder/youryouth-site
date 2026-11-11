@@ -32,6 +32,16 @@
    a name by the function), the footer quietly names the church
    and links to its Your People page.
 
+   The leaders listing rides the same terms (Nov 10, 2026):
+   when the leader has typed leaders into the public-site
+   settings (settings.site.leaders — a name, a title, one short
+   line, an optional photo), the function serves exactly those
+   entries as `leaders`, with the section's heading as
+   `leadersTitle`, and the page shows them after the events.
+   Nothing is derived from membership or the directory, there
+   are no contact details, and an empty list is absent from
+   the payload — so the section simply never appears.
+
    The footer also carries the group's own social links when
    the leader has set them (the payload's `socials` — the
    GROUP's own public pages, never a member's; shaped at the
@@ -182,6 +192,45 @@ function renderSocials(data) {
   box.classList.toggle('hidden', box.children.length === 0);
 }
 
+/* Leaders are leader-curated and arrive sanitized from the
+   function; this is the render-side twin of that shaping (the
+   same caps, entries with no name or no title dropped, a photo
+   kept only when it is one of this platform's own site-photo
+   URLs), so an older deployed function can never push an
+   oversized card — or a stranger's image address — onto the
+   page. No contact details exist in this shape at all. */
+const LEADER_PHOTO_MARK = '/storage/v1/object/public/church-site-photos/';
+function cleanLeaders(list) {
+  return (Array.isArray(list) ? list : [])
+    .map((e) => {
+      const photo = String((e && e.photo) || '').trim().slice(0, 600);
+      return {
+        name: String((e && e.name) || '').trim().slice(0, 80),
+        title: String((e && e.title) || '').trim().slice(0, 80),
+        line: String((e && e.line) || '').trim().slice(0, 240),
+        photo: photo.startsWith('https://') && photo.includes(LEADER_PHOTO_MARK) ? photo : '',
+      };
+    })
+    .filter((e) => e.name && e.title)
+    .slice(0, 12);
+}
+function leaderCard(e) {
+  const card = h('div', 'leadcard');
+  if (e.photo) {
+    const img = document.createElement('img');
+    img.src = e.photo;
+    img.alt = e.name;
+    img.addEventListener('error', () => img.remove());
+    card.appendChild(img);
+  }
+  const body = h('div', 'lbody');
+  body.appendChild(h('div', 't', e.name));
+  body.appendChild(h('div', 's', e.title));
+  if (e.line) body.appendChild(h('div', 'b', e.line));
+  card.appendChild(body);
+  return card;
+}
+
 /* The browser tab carries the group's identity too: its logo
    once the page has loaded, the Your Youth mark until then and
    for groups with no logo. */
@@ -303,6 +352,21 @@ function render(data) {
       if (e.notes) item.appendChild(h('div', 'n', e.notes));
       box.appendChild(item);
     }
+  }
+
+  // leaders — who a visitor will meet: the group's own curated
+  // list, after the events and before the invitation. The
+  // heading is the group's own words when it set one; the
+  // template's plain default otherwise. No entries in the
+  // payload — the section is not on the page at all.
+  const leaders = cleanLeaders(data.leaders);
+  $('sec-leaders').classList.toggle('hidden', leaders.length === 0 || PAGE.editing);
+  if (leaders.length > 0) {
+    const title = typeof data.leadersTitle === 'string' ? data.leadersTitle.trim().slice(0, 60) : '';
+    $('leaders-heading').textContent = title || 'Meet the leaders';
+    const box = $('site-leaders');
+    box.replaceChildren();
+    for (const e of leaders) box.appendChild(leaderCard(e));
   }
 
   // the app card — the way in; joining is leader-approved
