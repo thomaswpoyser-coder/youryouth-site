@@ -762,6 +762,32 @@
         <h2 class="sectiontitle">Announcements</h2>
         <p class="msg" id="cann-msg" style="margin:0 0 10px"></p>
         <div id="cann-list"></div>
+
+        <!-- Church bulletins (Step 35): the week's service sheet as
+             a real PDF kept in the church's own storage — never a
+             link. Hidden wholesale by loadChurchBulletins until
+             migration 035 has been pasted. -->
+        <div id="cbul-wrap">
+          <div class="card" id="cbul-form-card" style="margin-top:26px">
+            <h2 style="margin:0 0 4px;font-size:21px;color:var(--accent-text)">Add a bulletin</h2>
+            <p class="muted" style="margin:0 0 6px">The week's service sheet as a PDF. The file itself is kept here, in your church's own space, so it never depends on a link staying alive — members open it from the app.</p>
+            <form id="cbul-form">
+              <label for="cbul-file">This week's PDF</label>
+              <input type="file" id="cbul-file" accept="application/pdf,.pdf">
+              <label for="cbul-title">Title (optional — the file's name will do)</label>
+              <input type="text" id="cbul-title" maxlength="120" placeholder="e.g. Prayer sheet">
+              <label for="cbul-date">Date for this sheet</label>
+              <input type="date" id="cbul-date">
+              <div class="btnrow">
+                <button class="btn" type="submit" id="cbul-submit">Add bulletin</button>
+              </div>
+              <p class="msg" id="cbul-msg"></p>
+            </form>
+          </div>
+          <h2 class="sectiontitle">Bulletins</h2>
+          <p class="msg" id="cbul-list-msg" style="margin:0 0 10px"></p>
+          <div id="cbul-list"></div>
+        </div>
       </section>
 
       <!-- Church calendar -->
@@ -1202,7 +1228,7 @@ const S = {
   cLessons: [], cEditingId: null, cAssistOk: null, cAssistWhy: '',
   settings: null, siteMinistries: [], siteLeaders: [], sitePhotos: [], siteSlug: '', siteBucketOk: null,
   bootDone: false, recovering: false,
-  churchAnnouncements: [], churchEvents: [], directory: [],
+  churchAnnouncements: [], churchBulletins: [], churchEvents: [], directory: [],
   cQuestions: [], cPrayers: [], cSocialTab: 'prayers',
   dmThreads: [], dmActiveId: null, dmOtherName: '', dmMessages: [], dmHasEarlier: false,
   editingId: null,           // lesson open in the editor (null = new)
@@ -3553,8 +3579,10 @@ function applyChurchGroup() {
   $('cgroup-role').textContent = role;
   const leader = churchIsLeaderHere();
   $('cann-form-card').classList.toggle('hidden', !leader);
+  $('cbul-form-card').classList.toggle('hidden', !leader);
   $('cevent-form-card').classList.toggle('hidden', !leader);
   loadChurchAnnouncements();
+  loadChurchBulletins();
   loadChurchEvents();
   loadChurchDirectory();
 }
@@ -4046,6 +4074,127 @@ $('cann-form').addEventListener('submit', async (ev) => {
   cancelChurchAnnEdit();
   setMsg('caf-msg', wasEdit ? 'Announcement updated.' : 'Announcement posted to the whole church.', 'ok');
   loadChurchAnnouncements();
+});
+
+/* ---------- church bulletins (Step 35) ---------- */
+function churchBulletinMissingTable(error) {
+  if (!error) return false;
+  if (error.code === '42P01' || error.code === 'PGRST205') return true;
+  const m = String(error.message || '');
+  return /bulletins/.test(m) && /does not exist|could not find|schema cache/i.test(m);
+}
+function bulletinDateLabel(isoDate) {
+  const parts = String(isoDate || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some((n) => !n)) return String(isoDate || '');
+  return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+}
+async function fetchChurchBulletins() {
+  const { data, error } = await client
+    .from('bulletins')
+    .select('*')
+    .eq('group_id', S.churchGroupId)
+    .order('service_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(50);
+  return { list: data || [], error };
+}
+function churchBulletinCard(b, leader) {
+  const card = h('div', 'staticitem');
+  card.appendChild(h('div', 't', b.title));
+  card.appendChild(h('div', 's', bulletinDateLabel(b.service_date)));
+  const row = h('div', 'row-actions');
+  const open = h('a', 'btn secondary small', 'Open the PDF');
+  const { data } = client.storage.from('bulletins').getPublicUrl(b.file_path);
+  open.href = data.publicUrl;
+  open.target = '_blank';
+  open.rel = 'noopener';
+  row.appendChild(open);
+  if (leader) {
+    const del = h('button', 'btn danger small', 'Delete');
+    del.type = 'button';
+    del.addEventListener('click', async () => {
+      if (!window.confirm('Delete this bulletin? The file goes with it.')) return;
+      const { error } = await client.from('bulletins').delete().eq('id', b.id);
+      if (error) { setMsg('cbul-list-msg', 'That bulletin could not be deleted. Check your connection and try again.', 'err'); return; }
+      await client.storage.from('bulletins').remove([b.file_path]).catch(() => undefined);
+      loadChurchBulletins();
+    });
+    row.appendChild(del);
+  }
+  card.appendChild(row);
+  return card;
+}
+async function loadChurchBulletins() {
+  const { list, error } = await fetchChurchBulletins();
+  const wrap = $('cbul-wrap');
+  const box = $('cbul-list');
+  box.replaceChildren();
+  if (error) {
+    // Before migration 035 is pasted the table is not there: the
+    // whole bulletins block quietly leaves the page — the app
+    // hides it the same way. Any other failure says so plainly.
+    if (churchBulletinMissingTable(error)) { wrap.classList.add('hidden'); return; }
+    setMsg('cbul-list-msg', 'Bulletins could not load. Check your connection and try again.', 'err');
+    return;
+  }
+  wrap.classList.remove('hidden');
+  setMsg('cbul-list-msg', '');
+  const dateInput = $('cbul-date');
+  if (dateInput && !dateInput.value) {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    dateInput.value = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  S.churchBulletins = list;
+  if (list.length === 0) { box.appendChild(h('p', 'muted', 'No bulletins yet.')); return; }
+  const leader = churchIsLeaderHere();
+  for (const b of list) box.appendChild(churchBulletinCard(b, leader));
+}
+$('cbul-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const fileInput = $('cbul-file');
+  const file = fileInput.files && fileInput.files[0];
+  if (!file) { setMsg('cbul-msg', 'Choose this week\u2019s PDF first.', 'err'); return; }
+  if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { setMsg('cbul-msg', 'That file is not a PDF. Bulletins are PDFs \u2014 the sheet your office already emails each week is one.', 'err'); return; }
+  if (file.size > 10 * 1024 * 1024) { setMsg('cbul-msg', 'That file is too big \u2014 a bulletin PDF needs to be under 10 MB.', 'err'); return; }
+  const dateValue = $('cbul-date').value;
+  if (!dateValue) { setMsg('cbul-msg', 'Pick the date for this sheet first.', 'err'); return; }
+  const submit = $('cbul-submit');
+  submit.disabled = true;
+  submit.textContent = 'Adding\u2026';
+  const title = $('cbul-title').value.trim() || file.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').trim() || 'Weekly bulletin';
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '-');
+  const path = S.churchGroupId + '/' + Date.now() + '-' + safeName;
+  const up = await client.storage.from('bulletins').upload(path, file, { contentType: 'application/pdf' });
+  if (up.error) {
+    submit.disabled = false;
+    submit.textContent = 'Add bulletin';
+    if (/bucket not found/i.test(up.error.message || '')) { setMsg('cbul-msg', 'Bulletins need the one-time database update first \u2014 run migration 035 in Supabase, and this will work.', 'err'); $('cbul-wrap').classList.add('hidden'); return; }
+    setMsg('cbul-msg', 'That bulletin did not save. Check your connection and try again.', 'err');
+    return;
+  }
+  const { error } = await client.from('bulletins').insert({
+    group_id: S.churchGroupId,
+    title,
+    service_date: dateValue,
+    file_path: path,
+    file_name: file.name,
+    size_bytes: file.size,
+    created_by: S.user ? S.user.id : null,
+  });
+  if (error) {
+    await client.storage.from('bulletins').remove([path]).catch(() => undefined);
+    submit.disabled = false;
+    submit.textContent = 'Add bulletin';
+    if (churchBulletinMissingTable(error)) { setMsg('cbul-msg', 'Bulletins need the one-time database update first \u2014 run migration 035 in Supabase, and this will work.', 'err'); $('cbul-wrap').classList.add('hidden'); return; }
+    setMsg('cbul-msg', 'That bulletin did not save. Check your connection and try again.', 'err');
+    return;
+  }
+  $('cbul-form').reset();
+  submit.disabled = false;
+  submit.textContent = 'Add bulletin';
+  setMsg('cbul-msg', 'Bulletin added \u2014 the whole church can open it in the app now.', 'ok');
+  loadChurchBulletins();
 });
 
 /* ---------- church calendar (events) ---------- */
