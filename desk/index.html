@@ -567,6 +567,10 @@
               <p class="msg" id="chat-send-msg"></p>
             </form>
           </div>
+          <!-- Step 36: the leaders' Recently deleted list renders
+               here (24-hour window, view-only) — only when there
+               is something in it. -->
+          <div id="chat-trash"></div>
         </section>
       </section>
 
@@ -879,6 +883,11 @@
               </form>
             </div>
           </div>
+          <!-- Step 36: the GROUP CHAT's Recently deleted list
+               renders here (24-hour window, leaders only,
+               view-only). It reads chat_messages only — direct
+               messages are never part of it. -->
+          <div id="cdm-trash"></div>
         </section>
       </section>
 <section id="cpane-site" class="hidden">
@@ -2368,15 +2377,119 @@ function renderLeaderPrayers() {
   }
 }
 
-/* ---------- social: the group chat ---------- */
-async function loadGroupChat() {
-  setMsg('chat-msg', 'Loading the chat…');
+/* ---------- step 36: the 24-hour leader trash ----------
+   Deleting a group-chat message is a stamp (deleted_at,
+   deleted_by), not an erasure: the message leaves every app at
+   once, the group's leaders can review it here for 24 hours,
+   and an automatic purge then erases it for good. The window
+   lives ONLY in this desk — never in the apps. Direct messages
+   are never stamped and never shown here.
+   Capability is memoised like the apps': until migration 036
+   is pasted the stamp columns do not exist, deletes stay the
+   legacy hard deletes and reads stay unfiltered — quietly. */
+let chatStamp036 = null;
+function isMissingStampColumn(error) {
+  if (!error) return false;
+  if (error.code === '42703' || error.code === 'PGRST204') return true;
+  const m = error.message || '';
+  return /deleted_at/.test(m) && /does not exist|could not find|schema cache/i.test(m);
+}
+async function removeChatMessageRow(id, groupId) {
+  if (chatStamp036 !== false) {
+    const res = await client
+      .from('chat_messages')
+      .update({ deleted_at: new Date().toISOString(), deleted_by: S.user.id })
+      .eq('id', id)
+      .eq('group_id', groupId);
+    if (!res.error) { chatStamp036 = true; return { error: null }; }
+    if (!isMissingStampColumn(res.error)) return { error: res.error };
+    chatStamp036 = false;
+  }
+  const res = await client.from('chat_messages').delete().eq('id', id).eq('group_id', groupId);
+  return { error: res.error || null };
+}
+/* The Recently deleted block for one group, rendered into the
+   given container: stamped messages inside their 24 hours —
+   author, sent time, deleted time, who deleted — view-only.
+   Renders nothing when the window is empty, when the viewer is
+   not a leader of the group (the row rules refuse them anyway),
+   or while migration 036 has not landed. */
+async function loadRecentlyDeleted(groupId, boxId, leaderOk) {
+  const box = $(boxId);
+  if (!box) return;
+  box.replaceChildren();
+  if (!leaderOk || !groupId || chatStamp036 === false) return;
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await client
     .from('chat_messages')
     .select('*')
-    .eq('group_id', S.groupId)
-    .order('created_at', { ascending: false })
-    .limit(100);
+    .eq('group_id', groupId)
+    .not('deleted_at', 'is', null)
+    .gt('deleted_at', cutoff)
+    .order('deleted_at', { ascending: false })
+    .limit(50);
+  if (error) {
+    if (isMissingStampColumn(error)) chatStamp036 = false;
+    return;
+  }
+  chatStamp036 = true;
+  const rows = data || [];
+  if (rows.length === 0) return;
+  const ids = [];
+  for (const r of rows) {
+    if (r.author_id) ids.push(r.author_id);
+    if (r.deleted_by) ids.push(r.deleted_by);
+  }
+  const names = await resolveNames(ids);
+  const card = h('div', 'card');
+  card.style.marginTop = '14px';
+  const head = h('h2', null, 'Recently deleted — leaders only');
+  head.style.cssText = 'margin:0 0 4px;font-size:21px;color:var(--accent-text)';
+  card.appendChild(head);
+  const hint = h('p', 'hint', 'Messages deleted from the group chat in the last 24 hours. They are already gone from the app; leaders can review them here until they are permanently erased.');
+  hint.style.margin = '0';
+  card.appendChild(hint);
+  const list = h('div', null);
+  list.style.marginTop = '14px';
+  for (const r of rows) {
+    const row = h('div', 'chatmsg');
+    const headRow = h('div');
+    let authorName = 'Member';
+    if (r.kind === 'welcome') {
+      const meta = r.meta && typeof r.meta === 'object' ? r.meta : {};
+      authorName = meta.display_name || 'Member';
+    } else if (r.author_id && names.get(r.author_id)) {
+      authorName = names.get(r.author_id).name;
+    }
+    headRow.appendChild(h('span', 'who', authorName));
+    headRow.appendChild(h('span', 'when', fmtWhen(r.created_at)));
+    row.appendChild(headRow);
+    let by = 'a leader';
+    if (r.deleted_by && r.author_id && r.deleted_by === r.author_id) by = 'the author';
+    else if (r.deleted_by && names.get(r.deleted_by)) by = names.get(r.deleted_by).name;
+    row.appendChild(h('div', 's', 'Deleted ' + fmtWhen(r.deleted_at) + ' · by ' + by));
+    row.appendChild(h('div', 'txt', r.body || ''));
+    list.appendChild(row);
+  }
+  card.appendChild(list);
+  box.appendChild(card);
+}
+
+/* ---------- social: the group chat ---------- */
+async function loadGroupChat() {
+  setMsg('chat-msg', 'Loading the chat…');
+  const fetchChatRows = async (withStamp) => {
+    let q = client.from('chat_messages').select('*').eq('group_id', S.groupId);
+    if (withStamp) q = q.is('deleted_at', null);
+    return q.order('created_at', { ascending: false }).limit(100);
+  };
+  let { data, error } = await fetchChatRows(chatStamp036 !== false);
+  if (error && chatStamp036 !== false && isMissingStampColumn(error)) {
+    chatStamp036 = false;
+    ({ data, error } = await fetchChatRows(false));
+  } else if (!error && chatStamp036 !== false) {
+    chatStamp036 = true;
+  }
   if (error) {
     S.chatMessages = [];
     S.chatHeldFlags = [];
@@ -2418,6 +2531,7 @@ async function loadGroupChat() {
   });
   setMsg('chat-msg', '');
   renderGroupChat();
+  loadRecentlyDeleted(S.groupId, 'chat-trash', isLeaderHere());
 }
 function renderGroupChat() {
   const heldBox = $('chat-held');
@@ -2469,7 +2583,7 @@ async function deleteChatMessage(m) {
   // questions and prayers).
   await client.from('safety_flags').update({ status: 'resolved' })
     .eq('source', 'chat').eq('source_id', m.id).eq('status', 'open');
-  const { error } = await client.from('chat_messages').delete().eq('id', m.id).eq('group_id', S.groupId);
+  const { error } = await removeChatMessageRow(m.id, S.groupId);
   if (error) {
     setMsg('chat-msg', 'That message could not be deleted. Check your connection and try again.', 'err');
     return;
@@ -2505,7 +2619,7 @@ $('chat-form').addEventListener('submit', async (ev) => {
     if (flag.error) {
       // A held message with no flag would be invisible to leaders
       // forever (the app's Oct 28 audit) — remove it instead.
-      await client.from('chat_messages').delete().eq('id', data.id);
+      await removeChatMessageRow(data.id, S.groupId);
       setMsg('chat-send-msg', 'That message could not be sent safely. Check your connection and try again.', 'err');
       return;
     }
@@ -3626,7 +3740,10 @@ function selectChurchSocialTab(name) {
   }
   if (name === 'prayers') loadChurchPrayers();
   if (name === 'questions') loadChurchQuestions();
-  if (name === 'chats') loadDmThreads();
+  if (name === 'chats') {
+    loadDmThreads();
+    loadRecentlyDeleted(S.churchGroupId, 'cdm-trash', churchIsLeaderHere());
+  }
 }
 $('cstab-prayers').addEventListener('click', () => selectChurchSocialTab('prayers'));
 $('cstab-questions').addEventListener('click', () => selectChurchSocialTab('questions'));
