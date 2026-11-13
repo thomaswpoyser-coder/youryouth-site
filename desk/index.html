@@ -243,9 +243,9 @@
     <p class="muted" style="margin:0 0 6px">Leaders, students and parents all sign in here, with the same email and password you use in the Your Youth app.</p>
     <form id="signin-form">
       <label for="si-email">Email address</label>
-      <input type="email" id="si-email" autocomplete="email" required>
+      <input type="email" id="si-email" name="email" autocomplete="email" required>
       <label for="si-password">Password</label>
-      <input type="password" id="si-password" autocomplete="current-password" required>
+      <input type="password" id="si-password" name="password" autocomplete="current-password" required>
       <div class="btnrow">
         <button class="btn" type="submit" id="si-button">Sign in</button>
       </div>
@@ -263,6 +263,18 @@
       </form>
     </div>
     <p class="signin-note">New to Your Youth? Groups begin in the app — this desk is for people who already lead or belong to a group.</p>
+  </div>
+
+  <!-- ======================= welcome back (stored session) ======================= -->
+  <div id="view-gate" class="card center-card hidden">
+    <span class="wordmark">your youth</span>
+    <h1 style="margin:14px 0 4px;font-size:24px;color:var(--accent-text)">Welcome back</h1>
+    <p class="muted" style="margin:0 0 6px">This browser is still signed in as <strong id="gate-email"></strong>. One click takes you to your desk &mdash; or sign out to end it on this browser.</p>
+    <div class="btnrow">
+      <button class="btn" type="button" id="gate-signin">Sign in</button>
+      <button class="btn secondary" type="button" id="gate-signout">Sign out</button>
+    </div>
+    <p class="msg err" id="gate-msg"></p>
   </div>
 
   <!-- ======================= set a new password (reset link) ======================= -->
@@ -1237,6 +1249,7 @@ const S = {
   cLessons: [], cEditingId: null, cAssistOk: null, cAssistWhy: '',
   settings: null, siteMinistries: [], siteLeaders: [], sitePhotos: [], siteSlug: '', siteBucketOk: null,
   bootDone: false, recovering: false,
+  entered: false,            // this page view has let the session in (form submit, gate click, or a saved reset)
   churchAnnouncements: [], churchBulletins: [], churchEvents: [], directory: [],
   cQuestions: [], cPrayers: [], cSocialTab: 'prayers',
   dmThreads: [], dmActiveId: null, dmOtherName: '', dmMessages: [], dmHasEarlier: false,
@@ -1264,7 +1277,7 @@ function pendingApproval() {
 
 /* ---------- views ---------- */
 function showView(id) {
-  for (const v of ['view-loading', 'view-signin', 'view-newpassword', 'view-nogroup', 'view-app']) {
+  for (const v of ['view-loading', 'view-signin', 'view-gate', 'view-newpassword', 'view-nogroup', 'view-app']) {
     $(v).classList.toggle('hidden', v !== id);
   }
 }
@@ -1377,12 +1390,19 @@ $('signin-form').addEventListener('submit', async (ev) => {
   const btn = $('si-button');
   btn.disabled = true;
   setMsg('si-msg', '');
+  /* The click IS the entry: a session arriving from this submit
+     is let straight in (the welcome-back gate further down is
+     only for sessions restored from storage). The flag is set
+     before the call so the auth event it fires cannot reach
+     the gate first; a failed attempt takes it back. */
+  S.entered = true;
   const { error } = await client.auth.signInWithPassword({
     email: $('si-email').value.trim(),
     password: $('si-password').value,
   });
   btn.disabled = false;
   if (error) {
+    S.entered = false;
     const m = (error.message || '').toLowerCase();
     if (m.includes('invalid login credentials')) {
       setMsg('si-msg', 'That email and password did not match. Check them and try again.', 'err');
@@ -1444,19 +1464,79 @@ $('newpw-form').addEventListener('submit', async (ev) => {
     return;
   }
   S.recovery = false;
+  S.entered = true;
   setMsg('np-msg', 'Password saved. Taking you to your desk…', 'ok');
   loadAccount();
 });
+/* ---------- sign out: it ends here ----------
+   The old handler was one bare signOut() whose result nobody
+   read, over a boot that could resurrect the stored session —
+   on a shared computer the account simply would not leave
+   (the founder lived it, Nov 13, 2026). Now: revoke the
+   session everywhere (scope 'global', so the stored copies
+   behind the sister door and in the app die at their next
+   refresh too), purge the stored session from THIS browser
+   no matter what the server answered, drop the in-memory
+   copies, and hard-navigate to a clean boot, so a signed-out
+   browser wakes up on the sign-in form. If the server call
+   failed, a note is stashed across the navigation and said
+   plainly on that form; this browser is signed out either
+   way. The desk stores no credentials itself — remembering
+   the email and password stays the browser's own opt-in
+   prompt, offered by the named form fields above. */
 async function signOut() {
-  await client.auth.signOut();
-  // The platform look returns with the sign-in screen.
-  S.memberships = [];
-  S.churchMemberships = [];
-  applyDeskBrand();
-  renderHeaderLogo();
+  let failed = false;
+  try {
+    const { error } = await client.auth.signOut({ scope: 'global' });
+    if (error) failed = true;
+  } catch (e) { failed = true; }
+  purgeStoredSession();
+  S.accessToken = '';
+  S.user = null; S.profile = null; S.memberships = []; S.churchMemberships = [];
+  S.groupId = null; S.churchGroupId = null;
+  if (failed) {
+    try { window.sessionStorage.setItem('desk-signout-note', '1'); } catch (e) { /* storage unavailable */ }
+  }
+  window.location.replace(window.location.href.split('#')[0].split('?')[0]);
+}
+function purgeStoredSession() {
+  for (const store of [window.localStorage, window.sessionStorage]) {
+    try {
+      store.removeItem('sb-wsmqkhljjhaueahqizfr-auth-token');
+      const doomed = [];
+      for (let i = 0; i < store.length; i++) {
+        const k = store.key(i);
+        if (k && k.indexOf('sb-') === 0 && k.indexOf('-auth-token') !== -1) doomed.push(k);
+      }
+      for (const k of doomed) store.removeItem(k);
+    } catch (e) { /* storage unavailable */ }
+  }
 }
 $('signout').addEventListener('click', signOut);
 $('nogroup-signout').addEventListener('click', signOut);
+
+/* ---------- the welcome-back gate ----------
+   A session restored from storage (page load, refresh) does
+   not walk straight into the desk any more: it stops here,
+   names the account, and waits for one explicit click — Sign
+   in opens the desk exactly as before; Sign out runs the
+   full sign-out above. A sign-in completed through the form
+   in this same page view sets S.entered and never sees this,
+   and recoverSession() cannot route around it either: the
+   only road into the desk is loadAccount(), which checks.
+   Recovery keeps absolute priority — while a reset link is
+   being answered the password form wins, here as everywhere. */
+function showGate() {
+  if (S.recovery) { showView('view-newpassword'); return; }
+  const em = $('gate-email');
+  if (em) em.textContent = (S.user && S.user.email) || '';
+  showView('view-gate');
+}
+$('gate-signin').addEventListener('click', () => {
+  S.entered = true;
+  loadAccount();
+});
+$('gate-signout').addEventListener('click', signOut);
 
 /* Joining a group by code from the no-group card (Nov 6, 2026):
    the same lookup + membership insert the app uses, so an account
@@ -1504,6 +1584,14 @@ $('nogroup-join-form').addEventListener('submit', async (e) => {
    link was expired or already used. */
 if (/type=recovery/.test(window.location.hash || '')) S.recovery = true;
 let linkError = /error(_description)?=/.test(window.location.hash || '');
+/* A sign-out whose server call failed still purged this
+   browser and hard-navigated here; the note it stashed is
+   read once, now, and said on the sign-in form at boot. */
+let signOutNote = false;
+try {
+  signOutNote = window.sessionStorage.getItem('desk-signout-note') === '1';
+  if (signOutNote) window.sessionStorage.removeItem('desk-signout-note');
+} catch (e) { /* storage unavailable */ }
 
 client.auth.onAuthStateChange((event, session) => {
   /* Keep the desk's own copy of the freshest access token current
@@ -1585,6 +1673,16 @@ function showSignedOut() {
 
 /* ---------- account + groups ---------- */
 async function loadAccount() {
+  if (!S.entered && !S.recovery) {
+    /* No explicit entry in this page view: whatever session
+       brought us here came out of storage, so it stops at the
+       welcome-back gate and nothing about the account loads
+       until the click. Recovery arrivals never call this —
+       they route to the password form — and are exempted so
+       the guard can never stand in their way. */
+    showGate();
+    return;
+  }
   showView('view-loading');
   const uid = S.user.id;
   const prof = await client.from('profiles').select('*').eq('id', uid).maybeSingle();
@@ -6244,6 +6342,10 @@ async function recoverSession() {
          form instead of leaving a silent dead end. */
       linkError = false;
       setMsg('si-msg', 'That link did not work — it may have expired or already been used. If you were resetting your password, use “Forgot your password?” to get a fresh link.', 'err');
+    }
+    if (signOutNote) {
+      signOutNote = false;
+      setMsg('si-msg', 'You are signed out on this browser. The sign-out did not reach the server, so this account may still be signed in elsewhere — if a browser somewhere is not yours, sign out there too.', 'err');
     }
   }
 })();
