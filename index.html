@@ -182,8 +182,10 @@
   .phone-body::-webkit-scrollbar-thumb{background:rgba(34,51,42,.25);border-radius:99px}
   .phone-body[hidden]{display:none}
   .p-seg{display:flex;gap:7px}
-  .p-seg span{font-size:11.5px;font-weight:900;padding:6px 12px;border-radius:999px;background:#EFEAD8;color:#5C6B60}
-  .p-seg span.act{background:var(--p-primary);color:#fff}
+  .p-seg button{font:inherit;font-size:11.5px;font-weight:900;padding:6px 12px;border:0;border-radius:999px;background:#EFEAD8;color:#5C6B60;cursor:pointer}
+  .p-seg button.act{background:var(--p-primary);color:#fff}
+  .p-sub{display:grid;gap:11px}
+  .p-sub[hidden]{display:none}
   .p-bubble{background:#fff;border:1px solid #EAE3CE;border-radius:16px;border-bottom-left-radius:5px;padding:11px 13px;font-size:13.5px;font-weight:600;line-height:1.45}
   .p-bubble .who{display:block;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--p-accent);margin-bottom:4px}
   .give-btn{display:inline-block;margin-top:9px;font-weight:900;font-size:13.5px;background:var(--p-primary);color:#fff;border-radius:999px;padding:8px 16px}
@@ -451,15 +453,25 @@
               <div class="p-ann"><b>Read the whole Bible</b> — one tap opens the full Bible, in the version your group chose.</div>
             </div>
             <div class="phone-body" data-screen="community" hidden>
-              <div class="p-seg"><span class="act">Chat</span><span>Questions</span><span>Prayer</span></div>
-              <div class="p-bubble"><span class="who">Your leader</span>Great night Friday. Bring a friend next week — laser tag sign-up is open.</div>
-              <div class="p-card">
-                <div class="lab">Anonymous questions</div>
-                <div class="ev-d" style="font-size:13.5px">Ask anything. Your leaders see the question — the group never sees your name.</div>
+              <div class="p-seg" role="group" aria-label="Community sections">
+                <button type="button" class="act" data-sub="chat" aria-pressed="true">Chat</button>
+                <button type="button" data-sub="questions" aria-pressed="false">Questions</button>
+                <button type="button" data-sub="prayer" aria-pressed="false">Prayer</button>
               </div>
-              <div class="p-card">
-                <div class="lab">Prayer</div>
-                <div class="ev-d" style="font-size:13.5px">Prayer requests go straight to your leaders, who pray over them through the week.</div>
+              <div class="p-sub" data-subpanel="chat">
+                <div class="p-bubble"><span class="who">Your leader</span>Great night Friday. Bring a friend next week — laser tag sign-up is open.</div>
+              </div>
+              <div class="p-sub" data-subpanel="questions" hidden>
+                <div class="p-card">
+                  <div class="lab">Anonymous questions</div>
+                  <div class="ev-d" style="font-size:13.5px">Ask anything. Your leaders see the question — the group never sees your name.</div>
+                </div>
+              </div>
+              <div class="p-sub" data-subpanel="prayer" hidden>
+                <div class="p-card">
+                  <div class="lab">Prayer</div>
+                  <div class="ev-d" style="font-size:13.5px">Prayer requests go straight to your leaders, who pray over them through the week.</div>
+                </div>
               </div>
             </div>
             <div class="phone-body" data-screen="group" hidden>
@@ -730,6 +742,20 @@
         screens.forEach(function(sc){ sc.hidden = sc.getAttribute('data-screen') !== key; });
         tabs.forEach(function(x){
           var on = x === t;
+          x.classList.toggle('act', on);
+          x.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      });
+    });
+
+    var segBtns = document.querySelectorAll('.p-seg button[data-sub]');
+    var subPanels = document.querySelectorAll('.p-sub[data-subpanel]');
+    segBtns.forEach(function(b){
+      b.addEventListener('click', function(){
+        var key = b.getAttribute('data-sub');
+        subPanels.forEach(function(p){ p.hidden = p.getAttribute('data-subpanel') !== key; });
+        segBtns.forEach(function(x){
+          var on = x === b;
           x.classList.toggle('act', on);
           x.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
