@@ -169,14 +169,17 @@
     width:320px;max-width:88vw;border-radius:44px;background:#101010;
     padding:11px;box-shadow:var(--shadow);
   }
-  .phone-screen{background:#FDFBF4;border-radius:35px;overflow:hidden;color:#22332A}
+  /* the phone never resizes between tabs (founder, Nov 16, 2026): fixed screen height; a screen that needs more room scrolls inside its body */
+  .phone-screen{background:#FDFBF4;border-radius:35px;overflow:hidden;color:#22332A;display:flex;flex-direction:column;height:600px}
   .phone-cover{
-    background:var(--p-banner);color:#FBF6E7;padding:20px 18px 16px;position:relative;overflow:hidden;
+    background:var(--p-banner);color:#FBF6E7;padding:20px 18px 16px;position:relative;overflow:hidden;flex:none;
   }
   .phone-cover .spark{position:absolute;right:14px;top:12px;width:52px;height:52px;opacity:.28;color:#fff}
   .phone-cover .gname{font-weight:900;font-size:20px;line-height:1.15;position:relative}
   .phone-cover .gsub{font-size:12.5px;opacity:.85;font-weight:700;position:relative}
-  .phone-body{padding:14px 14px 8px;display:grid;gap:11px}
+  .phone-body{padding:14px 14px 8px;display:grid;gap:11px;flex:1 1 auto;min-height:0;overflow-y:auto;align-content:start;overscroll-behavior:contain;scrollbar-width:thin}
+  .phone-body::-webkit-scrollbar{width:5px}
+  .phone-body::-webkit-scrollbar-thumb{background:rgba(34,51,42,.25);border-radius:99px}
   .phone-body[hidden]{display:none}
   .p-seg{display:flex;gap:7px}
   .p-seg span{font-size:11.5px;font-weight:900;padding:6px 12px;border-radius:999px;background:#EFEAD8;color:#5C6B60}
@@ -201,7 +204,7 @@
   .p-ann b{font-weight:900}
   .phone-tabs{
     display:flex;justify-content:space-around;padding:10px 8px 14px;background:#fff;
-    border-top:1px solid #EAE3CE;
+    border-top:1px solid #EAE3CE;flex:none;
   }
   .phone-tabs .tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:#9AA294;background:none;border:0;cursor:pointer;font-family:inherit;padding:2px 6px}
   .phone-tabs .tab svg{width:22px;height:22px}
