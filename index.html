@@ -177,6 +177,13 @@
   .phone-cover .gname{font-weight:900;font-size:20px;line-height:1.15;position:relative}
   .phone-cover .gsub{font-size:12.5px;opacity:.85;font-weight:700;position:relative}
   .phone-body{padding:14px 14px 8px;display:grid;gap:11px}
+  .phone-body[hidden]{display:none}
+  .p-seg{display:flex;gap:7px}
+  .p-seg span{font-size:11.5px;font-weight:900;padding:6px 12px;border-radius:999px;background:#EFEAD8;color:#5C6B60}
+  .p-seg span.act{background:var(--p-primary);color:#fff}
+  .p-bubble{background:#fff;border:1px solid #EAE3CE;border-radius:16px;border-bottom-left-radius:5px;padding:11px 13px;font-size:13.5px;font-weight:600;line-height:1.45}
+  .p-bubble .who{display:block;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--p-accent);margin-bottom:4px}
+  .give-btn{display:inline-block;margin-top:9px;font-weight:900;font-size:13.5px;background:var(--p-primary);color:#fff;border-radius:999px;padding:8px 16px}
   .p-card{background:#fff;border:1px solid #EAE3CE;border-radius:16px;padding:13px 14px}
   .p-card .lab{font-size:11px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--p-accent);margin-bottom:5px}
   .p-card .verse-t{font-size:14.5px;line-height:1.45;font-weight:600;font-style:italic}
@@ -196,7 +203,7 @@
     display:flex;justify-content:space-around;padding:10px 8px 14px;background:#fff;
     border-top:1px solid #EAE3CE;
   }
-  .phone-tabs .tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:#9AA294}
+  .phone-tabs .tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:#9AA294;background:none;border:0;cursor:pointer;font-family:inherit;padding:2px 6px}
   .phone-tabs .tab svg{width:22px;height:22px}
   .phone-tabs .tab.act{color:var(--p-primary)}
   .looks{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
@@ -400,17 +407,17 @@
     <div class="wrap">
       <div class="sec-head">
         <h2>One logo in, a whole look out</h2>
-        <p>This is the idea at the heart of Your Youth. Try it: pick a look below and watch the group's home screen change — the same thing happens in the app when a leader uploads a logo. Tap &ldquo;I'm coming&rdquo; while you're there.</p>
+        <p>This is the idea at the heart of Your Youth. Try it: tap the tabs at the bottom of the phone to walk through the app, pick a look below and watch the whole phone change — the same thing happens in the app when a leader uploads a logo. Tap &ldquo;I'm coming&rdquo; while you're there.</p>
       </div>
       <div class="demo">
-        <div class="phone" id="phone" aria-label="Illustration of the Your Youth home screen">
+        <div class="phone" id="phone" aria-label="Interactive illustration of the Your Youth app — tap the tabs to explore">
           <div class="phone-screen">
             <div class="phone-cover">
               <svg class="spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.3L19.2 9l-5.3 1.9L12 16.2l-1.9-5.3L4.8 9l5.3-1.7L12 2Z"/></svg>
               <div class="gname" id="demoGroupName">SoulFire Youth</div>
               <div class="gsub">Friday youth · all welcome</div>
             </div>
-            <div class="phone-body">
+            <div class="phone-body" data-screen="home">
               <div class="p-card">
                 <div class="lab">Verse of the day</div>
                 <div class="verse-t">&ldquo;Let no man despise thy youth; but be thou an example of the believers&hellip;&rdquo;</div>
@@ -427,11 +434,49 @@
               </div>
               <div class="p-ann"><b>Announcement:</b> Bring a friend this week — laser tag sign-up is open.</div>
             </div>
+            <div class="phone-body" data-screen="bible" hidden>
+              <div class="p-card">
+                <div class="lab">This week's reading</div>
+                <div class="ev-t">Matthew 4:18–22</div>
+                <div class="ev-d">The Call of the First Disciples</div>
+              </div>
+              <div class="p-card">
+                <div class="lab">Latest lesson</div>
+                <div class="ev-t">Follow Me</div>
+                <div class="ev-d">Written by your leaders — here to read any time, with room for your own notes.</div>
+              </div>
+              <div class="p-ann"><b>Read the whole Bible</b> — one tap opens the full Bible, in the version your group chose.</div>
+            </div>
+            <div class="phone-body" data-screen="community" hidden>
+              <div class="p-seg"><span class="act">Chat</span><span>Questions</span><span>Prayer</span></div>
+              <div class="p-bubble"><span class="who">Your leader</span>Great night Friday. Bring a friend next week — laser tag sign-up is open.</div>
+              <div class="p-card">
+                <div class="lab">Anonymous questions</div>
+                <div class="ev-d" style="font-size:13.5px">Ask anything. Your leaders see the question — the group never sees your name.</div>
+              </div>
+              <div class="p-card">
+                <div class="lab">Prayer</div>
+                <div class="ev-d" style="font-size:13.5px">Prayer requests go straight to your leaders, who pray over them through the week.</div>
+              </div>
+            </div>
+            <div class="phone-body" data-screen="group" hidden>
+              <div class="p-card">
+                <div class="lab">Your group</div>
+                <div class="ev-t" id="demoGroupName2">SoulFire Youth</div>
+                <div class="ev-d">Fridays · 6:30–8:30 pm</div>
+              </div>
+              <div class="p-card">
+                <div class="lab">Giving</div>
+                <div class="ev-d" style="font-size:13.5px">Giving goes through your group's own giving page — never through the app.</div>
+                <span class="give-btn">Give to your group</span>
+              </div>
+              <div class="p-ann">Parents get their own view: approvals, giving, and what's coming up — no noise.</div>
+            </div>
             <div class="phone-tabs">
-              <span class="tab act"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3.1 2.8 11a.9.9 0 0 0 .6 1.6H5v7.6c0 .5.4.9.9.9h4.2v-6.3h3.8v6.3h4.2a.9.9 0 0 0 .9-.9v-7.6h1.6a.9.9 0 0 0 .6-1.6L12 3.1Z"/></svg>Home</span>
-              <span class="tab"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 4.2C9.5 3 7.4 2.5 4.7 2.7c-.5 0-.7.3-.7.7v14.9c0 .4.3.7.7.7 2.6-.2 4.7.3 6.3 1.4V4.2Zm2 0v16.2c1.6-1.1 3.7-1.6 6.3-1.4.4 0 .7-.3.7-.7V3.4c0-.4-.3-.7-.7-.7-2.7-.2-4.8.3-6.3 1.5Z"/></svg>Bible</span>
-              <span class="tab"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 3.5h16A1.5 1.5 0 0 1 21.5 5v9A1.5 1.5 0 0 1 20 15.5H12l-4.6 4a.8.8 0 0 1-1.3-.6v-3.4H4A1.5 1.5 0 0 1 2.5 14V5A1.5 1.5 0 0 1 4 3.5Z"/></svg>Community</span>
-              <span class="tab"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8.5 11.5a3.8 3.8 0 1 1 3.5-5.2 3.8 3.8 0 0 1-3.5 5.2Zm7.3.4a3.4 3.4 0 1 1 2-6.3 4.2 4.2 0 0 1 0 6.6 3.7 3.7 0 0 1-2-.3ZM2.5 20.4c.6-3.3 3-5 6-5s5.4 1.7 6 5a.8.8 0 0 1-.8.9H3.3a.8.8 0 0 1-.8-.9Zm14.9.7a.8.8 0 0 1-.8-1c-.3-1.9-1.2-3.4-2.6-4.4 2.9-.5 6.3 1 7 4.5a.8.8 0 0 1-.8.9h-2.8Z"/></svg>My Group</span>
+              <button class="tab act" type="button" data-tab="home" aria-pressed="true"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3.1 2.8 11a.9.9 0 0 0 .6 1.6H5v7.6c0 .5.4.9.9.9h4.2v-6.3h3.8v6.3h4.2a.9.9 0 0 0 .9-.9v-7.6h1.6a.9.9 0 0 0 .6-1.6L12 3.1Z"/></svg>Home</button>
+              <button class="tab" type="button" data-tab="bible" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 4.2C9.5 3 7.4 2.5 4.7 2.7c-.5 0-.7.3-.7.7v14.9c0 .4.3.7.7.7 2.6-.2 4.7.3 6.3 1.4V4.2Zm2 0v16.2c1.6-1.1 3.7-1.6 6.3-1.4.4 0 .7-.3.7-.7V3.4c0-.4-.3-.7-.7-.7-2.7-.2-4.8.3-6.3 1.5Z"/></svg>Bible</button>
+              <button class="tab" type="button" data-tab="community" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 3.5h16A1.5 1.5 0 0 1 21.5 5v9A1.5 1.5 0 0 1 20 15.5H12l-4.6 4a.8.8 0 0 1-1.3-.6v-3.4H4A1.5 1.5 0 0 1 2.5 14V5A1.5 1.5 0 0 1 4 3.5Z"/></svg>Community</button>
+              <button class="tab" type="button" data-tab="group" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8.5 11.5a3.8 3.8 0 1 1 3.5-5.2 3.8 3.8 0 0 1-3.5 5.2Zm7.3.4a3.4 3.4 0 1 1 2-6.3 4.2 4.2 0 0 1 0 6.6 3.7 3.7 0 0 1-2-.3ZM2.5 20.4c.6-3.3 3-5 6-5s5.4 1.7 6 5a.8.8 0 0 1-.8.9H3.3a.8.8 0 0 1-.8-.9Zm14.9.7a.8.8 0 0 1-.8-1c-.3-1.9-1.2-3.4-2.6-4.4 2.9-.5 6.3 1 7 4.5a.8.8 0 0 1-.8.9h-2.8Z"/></svg>My Group</button>
             </div>
           </div>
         </div>
@@ -668,7 +713,23 @@
         phone.style.setProperty('--p-soft', L.soft);
         phone.style.setProperty('--p-banner', L.primary);
         gname.textContent = L.name;
+        var g2 = document.getElementById('demoGroupName2');
+        if (g2) g2.textContent = L.name;
         btns.forEach(function(x){ x.setAttribute('aria-pressed', x===b ? 'true' : 'false'); });
+      });
+    });
+
+    var tabs = document.querySelectorAll('.phone-tabs .tab');
+    var screens = document.querySelectorAll('.phone-body[data-screen]');
+    tabs.forEach(function(t){
+      t.addEventListener('click', function(){
+        var key = t.getAttribute('data-tab');
+        screens.forEach(function(sc){ sc.hidden = sc.getAttribute('data-screen') !== key; });
+        tabs.forEach(function(x){
+          var on = x === t;
+          x.classList.toggle('act', on);
+          x.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
       });
     });
 
