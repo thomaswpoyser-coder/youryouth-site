@@ -2493,6 +2493,17 @@ function isMissingStampColumn(error) {
   const m = error.message || '';
   return /deleted_at/.test(m) && /does not exist|could not find|schema cache/i.test(m);
 }
+/* Migration 037 (the leaders' room): chat_messages carries a room
+   column ('group' | 'leaders'). The desk's chat view is the group
+   room only — leaders-room rows must not mix into it. Memoised
+   like chatStamp036: a missing-column error retires the filter
+   for the session and the read falls back to unfiltered. */
+let chatRoom037 = null;
+function isMissingRoomColumn(error) {
+  if (!error) return false;
+  const m = error.message || '';
+  return /room/.test(m) && /does not exist|could not find|schema cache/i.test(m);
+}
 async function removeChatMessageRow(id, groupId) {
   if (chatStamp036 !== false) {
     const res = await client
@@ -2577,17 +2588,24 @@ async function loadRecentlyDeleted(groupId, boxId, leaderOk) {
 /* ---------- social: the group chat ---------- */
 async function loadGroupChat() {
   setMsg('chat-msg', 'Loading the chat…');
-  const fetchChatRows = async (withStamp) => {
+  const fetchChatRows = async (withStamp, withRoom) => {
     let q = client.from('chat_messages').select('*').eq('group_id', S.groupId);
+    if (withRoom) q = q.eq('room', 'group');
     if (withStamp) q = q.is('deleted_at', null);
     return q.order('created_at', { ascending: false }).limit(100);
   };
-  let { data, error } = await fetchChatRows(chatStamp036 !== false);
-  if (error && chatStamp036 !== false && isMissingStampColumn(error)) {
-    chatStamp036 = false;
-    ({ data, error } = await fetchChatRows(false));
-  } else if (!error && chatStamp036 !== false) {
-    chatStamp036 = true;
+  let { data, error } = await fetchChatRows(chatStamp036 !== false, chatRoom037 !== false);
+  for (let attempt = 0; error && attempt < 2; attempt++) {
+    if (chatRoom037 !== false && isMissingRoomColumn(error)) {
+      chatRoom037 = false;
+    } else if (chatStamp036 !== false && isMissingStampColumn(error)) {
+      chatStamp036 = false;
+    } else break;
+    ({ data, error } = await fetchChatRows(chatStamp036 !== false, chatRoom037 !== false));
+  }
+  if (!error) {
+    if (chatStamp036 !== false) chatStamp036 = true;
+    if (chatRoom037 !== false) chatRoom037 = true;
   }
   if (error) {
     S.chatMessages = [];
