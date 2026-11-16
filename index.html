@@ -148,6 +148,15 @@
   .features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
   @media (max-width:900px){.features{grid-template-columns:repeat(2,1fr)}}
   @media (max-width:560px){.features{grid-template-columns:1fr}}
+  /* Features / For leaders tabs: a name + one line per feature (Nov 16 pitch research). Detail lives in the FAQ and privacy pages. */
+  .ftabs{display:flex;gap:8px;margin:0 0 22px}
+  .ftabs button{font:inherit;font-weight:800;font-size:15px;padding:8px 20px;border-radius:999px;border:1.5px solid var(--line);background:none;color:var(--ink-soft);cursor:pointer}
+  .ftabs button.act{background:var(--green);border-color:var(--green);color:var(--cream-text)}
+  .flist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px 30px}
+  @media (max-width:700px){.flist{grid-template-columns:1fr}}
+  .flist li{font-size:16px;color:var(--ink-soft);line-height:1.45}
+  .flist strong{color:var(--ink)}
+  .fpanel[hidden]{display:none}
   .feature{
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
     padding:26px 24px;
@@ -366,47 +375,6 @@
   </div>
 
   <!-- ============ WHAT'S INSIDE ============ -->
-  <section id="inside">
-    <div class="wrap">
-      <div class="sec-head">
-        <h2>Everything a youth group needs, nothing it doesn't</h2>
-        <p>A leader creates the group, uploads its logo, and hands out a join code — then the whole group, youth, leaders and parents, lives in one app, each with the view that's right for them.</p>
-      </div>
-      <div class="features">
-        <article class="feature">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2l2 4.6 4.6 2-4.6 2-2 4.6-2-4.6-4.6-2 4.6-2 2-4.6ZM19 13.5l1.1 2.5 2.5 1.1-2.5 1.1L19 20.7l-1.1-2.5-2.5-1.1 2.5-1.1L19 13.5ZM4.6 14.8l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8.8-1.9Z"/></svg></div>
-          <h3>It looks like your group</h3>
-          <p>Upload your group's logo and the app themes itself from it — colours, cover art, and icons — so it feels like home, not rented software.</p>
-        </article>
-        <article class="feature">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 3.5h16A1.5 1.5 0 0 1 21.5 5v9A1.5 1.5 0 0 1 20 15.5H12l-4.6 4a.8.8 0 0 1-1.3-.6v-3.4H4A1.5 1.5 0 0 1 2.5 14V5A1.5 1.5 0 0 1 4 3.5Z"/></svg></div>
-          <h3>One big group chat</h3>
-          <p>Everyone talks in a single group conversation — the way youth night actually works. No private chats between students, by design.</p>
-        </article>
-        <article class="feature">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.8a6.3 6.3 0 0 1 3.6 11.4c-.7.4-1 .8-1 1.6V16a1 1 0 0 1-1 1h-3.2a1 1 0 0 1-1-1v-.2c0-.8-.3-1.2-1-1.6A6.3 6.3 0 0 1 12 2.8ZM9.4 19h5.2a1 1 0 0 1 0 2H9.4a1 1 0 0 1 0-2Z"/></svg></div>
-          <h3>Ask anything, anonymously</h3>
-          <p>Youth ask with no name attached. The group sees the question and the leader's answer; leaders always see who asked.</p>
-        </article>
-        <article class="feature">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.2 11.2V6.1c0-1 .8-1.8 1.8-1.8.9 0 1.6.6 1.7 1.5l.5 4h1.6l.5-4c.1-.9.8-1.5 1.7-1.5 1 0 1.8.8 1.8 1.8v5.1l2.2 2.1c2 1.9 3.1 4 3.1 5.9 0 .8-.7 1.4-1.5 1.4H3.4c-.8 0-1.5-.6-1.5-1.4 0-1.9 1.1-4 3.1-5.9l2.2-2.1Z" transform="translate(0,-1)"/></svg></div>
-          <h3>Prayer goes to leaders only</h3>
-          <p>Prayer requests go straight to leaders, who can mark them prayed for — never to the group.</p>
-        </article>
-        <article class="feature">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 2.5a1 1 0 0 1 2 0v1h6v-1a1 1 0 0 1 2 0v1h1.5A2.5 2.5 0 0 1 21 6v12a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18V6a2.5 2.5 0 0 1 2.5-2.5H7v-1Zm-2 6v9.5a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5V8.5H5Z"/></svg></div>
-          <h3>Events, announcements &amp; RSVPs</h3>
-          <p>Leaders post what's on; everyone sees it at a glance, and a tap on &ldquo;I'm coming&rdquo; tells leaders who's in.</p>
-        </article>
-        <article class="feature">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 4.2C9.5 3 7.4 2.5 4.7 2.7c-.5 0-.7.3-.7.7v14.9c0 .4.3.7.7.7 2.6-.2 4.7.3 6.3 1.4V4.2Zm2 0v16.2c1.6-1.1 3.7-1.6 6.3-1.4.4 0 .7-.3.7-.7V3.4c0-.4-.3-.7-.7-.7-2.7-.2-4.8.3-6.3 1.5Z"/></svg></div>
-          <h3>The Bible, built in</h3>
-          <p>Reading plans and passages in the World English Bible and King James Version — both public domain, no licences, no ads — plus a verse of the day on Home.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
   <!-- ============ DEMO ============ -->
   <section id="demo">
     <div class="wrap">
@@ -505,6 +473,42 @@
             <button class="look-btn" type="button" data-look="ember" aria-pressed="false"><span class="sw" style="background:#8A3B22"></span>Ember</button>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section id="inside">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Everything a youth group needs, nothing it doesn't</h2>
+        <p>A leader creates the group, uploads its logo, and hands out a join code — then youth, leaders and parents each get the view that's right for them.</p>
+      </div>
+      <div class="ftabs">
+        <button type="button" class="act" data-ftab="features">Features</button>
+        <button type="button" data-ftab="leaders">For leaders</button>
+      </div>
+      <div class="fpanel" data-fpanel="features">
+        <ul class="flist">
+          <li><strong>Looks like your group</strong> — your logo sets the colours and cover.</li>
+          <li><strong>One group chat</strong> — everyone in a single conversation, leaders in it too.</li>
+          <li><strong>Anonymous questions</strong> — no name shown; leaders see who asked.</li>
+          <li><strong>Prayer</strong> — requests go to leaders, never the whole group.</li>
+          <li><strong>Events &amp; RSVPs</strong> — see what's on; one tap says you're coming.</li>
+          <li><strong>Lessons</strong> — the week's teaching and passage, in the app.</li>
+          <li><strong>Bible built in</strong> — reading plans and passages, WEB and KJV.</li>
+          <li><strong>Announcements</strong> — what's new reaches the whole group at once.</li>
+        </ul>
+      </div>
+      <div class="fpanel" data-fpanel="leaders" hidden>
+        <ul class="flist">
+          <li><strong>Approvals</strong> — a leader approves every student and parent who joins.</li>
+          <li><strong>Safety queue</strong> — flagged messages are held for a leader's review.</li>
+          <li><strong>Recently deleted</strong> — deleted chat stays visible to leaders for 24 hours.</li>
+          <li><strong>Sermon help</strong> — extra help with sermons and lessons, when you want it.</li>
+          <li><strong>The desk</strong> — a web workbench for lessons, your public page, and queues.</li>
+          <li><strong>Your public page</strong> — your group's own page, built from your group.</li>
+        </ul>
       </div>
     </div>
   </section>
@@ -751,6 +755,13 @@
       } else { done(); }
     });
   })();
+
+    // Features / For leaders tabs
+    var fbtns = document.querySelectorAll('.ftabs button');
+    fbtns.forEach(function(b){ b.addEventListener('click', function(){
+      fbtns.forEach(function(x){ x.classList.toggle('act', x === b); });
+      document.querySelectorAll('.fpanel').forEach(function(p){ p.hidden = p.getAttribute('data-fpanel') !== b.getAttribute('data-ftab'); });
+    }); });
 </script>
 </body>
 </html>
