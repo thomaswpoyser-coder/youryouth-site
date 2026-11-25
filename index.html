@@ -78,7 +78,7 @@
   }
   .nav-in{display:flex;align-items:center;gap:26px;padding:12px 0}
   .brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink)}
-  .brand svg{width:34px;height:34px;flex:none}
+  .brand svg,.brand img{width:34px;height:34px;flex:none}
   .brand span{font-weight:900;font-size:21px;letter-spacing:-.01em;color:var(--green)}
   @media (prefers-color-scheme: dark){.brand span{color:var(--cream-text)}}
   .nav-links{margin-left:auto;display:flex;gap:22px;flex-wrap:wrap}
@@ -137,6 +137,7 @@
 
   /* ---------- sections ---------- */
   section{padding:64px 0 8px}
+  #beta{scroll-margin-top:76px}
   .sec-head{max-width:720px;margin-bottom:30px}
   .sec-head h2{
     font-size:clamp(27px,3.4vw,36px);font-weight:900;letter-spacing:-.01em;
@@ -316,19 +317,20 @@
 </style>
 </head>
 <body>
+<div class="beta-banner" style="background:#123324;color:#F2ECDA;text-align:center;padding:12px 16px;font-family:inherit;">
+  <strong style="letter-spacing:.02em;">Your Youth is in open beta.</strong>
+  <span style="opacity:.88;">&nbsp;We&rsquo;re in final testing, and testers get in free and shape what launches.</span>
+  <a href="#beta" style="display:inline-block;background:#D99A26;color:#123324;font-weight:700;text-decoration:none;padding:6px 16px;border-radius:999px;margin-left:10px;white-space:nowrap;">Join the beta</a>
+</div>
 <div class="sister-site" style="background:#fff;border-bottom:1px solid #E4DFD2;text-align:right;padding:8px 18px;font-family:inherit;font-size:14.5px;color:#6B6F66;">
   <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#2E493A;color:#C9A227;text-align:center;line-height:22px;font-size:13px;vertical-align:-6px;margin-right:7px;">&#10022;</span>Want this for your whole church? <a href="https://yourpeople.church" style="color:#2E493A;text-decoration:none;font-weight:600;">Your People &rarr;</a>
-</div>
-<div class="app-coming-soon" style="background:#2E493A;color:#FAF8F3;text-align:center;padding:10px 16px;font-family:inherit;">
-  <strong style="letter-spacing:.04em;">App coming soon</strong>
-  <span style="opacity:.85;">&nbsp;&mdash;&nbsp;Your Youth is in final testing, launching soon on Android and iPhone.</span>
 </div>
 
 
 <header class="nav">
   <div class="wrap nav-in">
     <a class="brand" href="#top" aria-label="Your Youth — home">
-      <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M6 27c3 9 9.5 14 18 14s15-5 18-14c1.2-3.6-2.2-5.4-4-2.6C35.5 28.4 33 31 30 32.4c2.8-3.8 2-7-1-7.4-2.3-.3-3.4 1.7-5 4.4-1.6-2.7-2.7-4.7-5-4.4-3 .4-3.8 3.6-1 7.4-3-1.4-5.5-4-8-8C8.2 21.6 4.8 23.4 6 27Z" fill="#1E4634"/><path d="M24 8.5l1.7 3.9 3.9 1.7-3.9 1.7L24 19.7l-1.7-3.9-3.9-1.7 3.9-1.7L24 8.5Z" fill="#D99A26"/></svg>
+      <img src="/assets/your-youth-mark.png" alt="" width="34" height="34">
       <span>your youth</span>
     </a>
     <nav class="nav-links" aria-label="Page sections">
